@@ -1,14 +1,17 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { EstudianteRepository } from '../../../core/domain/ports/estudiante.repository';
 import { AuthState } from '../../../../auth/infrastructure/state/auth.state';
 import { Anuncio } from '../../../core/domain/models/anuncio.model';
+import { ComunicadosRepository } from '../../../../shared/domain/ports/comunicados.repository';
+import { Comunicado } from '../../../../shared/domain/models/comunicado.model';
+import { PaginadorComponent } from '../../../../shared/components/paginador/paginador.component';
 
 @Component({
   selector: 'app-dashboard-estudiante',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink],
+  imports: [RouterLink, PaginadorComponent],
   template: `
     <div class="space-y-6">
       <header class="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -96,53 +99,97 @@ import { Anuncio } from '../../../core/domain/models/anuncio.model';
           </div>
           <div class="mt-6 flex justify-between items-center">
             <span class="text-xs text-emerald-700 font-bold bg-emerald-100/50 px-3 py-1 rounded-full">EdTech School</span>
-            <span class="text-xs text-slate-400 font-mono">2024</span>
+            <span class="text-xs text-slate-400 font-mono">2026</span>
           </div>
         </section>
 
-        <!-- Bento Card 4: Tareas y Anuncios (col-span-2) -->
-        <section class="bg-white rounded-3xl p-6 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] md:col-span-2 flex flex-col justify-between hover:shadow-md hover:border-indigo-100 hover:-translate-y-0.5 transition-all duration-200">
+        <!-- Bento Card 4: Tareas y Anuncios (col-span-3) -->
+        <section class="bg-white rounded-3xl p-6 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] md:col-span-3 flex flex-col justify-between hover:shadow-md hover:border-indigo-100 hover:-translate-y-0.5 transition-all duration-200">
           <div>
             <div class="flex justify-between items-center mb-3">
               <div>
-                <span class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Avisos del Aula</span>
-                <h3 class="text-xl font-bold text-slate-800 mt-1">Novedades y Anuncios</h3>
+                <span class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Muro de Anuncios</span>
+                <h3 class="text-xl font-bold text-slate-800 mt-1">Novedades, Tareas y Comunicados</h3>
               </div>
-              <span class="bg-indigo-50 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono">CLASE</span>
+              <span class="bg-indigo-50 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono">GLOBAL Y AULA</span>
             </div>
-            <p class="text-sm text-slate-500 mb-4 font-normal">Información relevante publicada por tus docentes o auxiliares de aula.</p>
+            <p class="text-sm text-slate-500 mb-4 font-normal">Información relevante publicada por Dirección y por tus docentes de aula.</p>
           </div>
 
-          <div class="space-y-3">
-            @for (anuncio of anuncios(); track anuncio.id) {
-              <div class="p-3 bg-slate-50/50 border border-slate-100 rounded-2xl flex items-start justify-between gap-3 group/item">
-                <div class="flex items-start gap-3">
-                  @if (anuncio.tipo.toLowerCase() === 'examen') {
-                    <span class="bg-rose-50 border border-rose-100 text-rose-700 text-[9px] font-black px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">
-                      {{ anuncio.titulo.toUpperCase() }}
-                    </span>
-                  } @else if (anuncio.tipo.toLowerCase() === 'entregado' || anuncio.tipo.toLowerCase() === 'calificacion') {
-                    <span class="bg-emerald-50 border border-emerald-100 text-emerald-700 text-[9px] font-black px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">
-                      {{ anuncio.titulo.toUpperCase() }}
-                    </span>
-                  } @else {
-                    <span class="bg-indigo-50 border border-indigo-100 text-indigo-700 text-[9px] font-black px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">
-                      {{ anuncio.titulo.toUpperCase() }}
-                    </span>
-                  }
-                  <div>
-                    <p class="text-xs text-slate-600 leading-relaxed font-medium" [innerHTML]="anuncio.mensaje"></p>
-                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1.5">
-                      Docente: {{ anuncio.docenteNombre }} {{ anuncio.docenteApellido }}
-                    </p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+            
+            <!-- COMUNICADOS INSTITUCIONALES -->
+            <div class="flex flex-col">
+              <h4 class="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Comunicados Institucionales</h4>
+              <div class="space-y-3 flex-1">
+                @for (c of comunicadosPagina(); track c.id) {
+                  <div class="p-3 bg-slate-50/50 border border-slate-100 rounded-2xl flex items-start gap-3">
+                    @if (c.importancia === 'alta') {
+                      <span class="bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">URGENTE</span>
+                    } @else if (c.importancia === 'informativo') {
+                      <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">ÉXITO</span>
+                    } @else {
+                      <span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">AVISO</span>
+                    }
+                    <div>
+                      <p class="text-xs font-bold text-slate-800">{{ c.titulo }}</p>
+                      <p class="text-xs text-slate-600 leading-relaxed mt-0.5">{{ c.mensaje }}</p>
+                    </div>
                   </div>
+                } @empty {
+                  <div class="p-6 text-center bg-slate-50/30 rounded-2xl border border-dashed border-slate-100">
+                    <p class="text-xs text-slate-400 font-medium">No hay comunicados globales de dirección.</p>
+                  </div>
+                }
+              </div>
+              @if (comunicados().length > porPagina) {
+                <div class="mt-4 pt-4 border-t border-slate-50">
+                  <app-paginador [paginaActual]="paginaComunicados()" [total]="comunicados().length" [porPagina]="porPagina" (paginaCambia)="paginaComunicados.set($event)" />
                 </div>
+              }
+            </div>
+
+            <!-- ANUNCIOS DE CLASE -->
+            <div class="flex flex-col">
+              <h4 class="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Anuncios de tus Docentes</h4>
+              <div class="space-y-3 flex-1">
+                @for (anuncio of anunciosPagina(); track anuncio.id) {
+                  <div class="p-3 bg-slate-50/50 border border-slate-100 rounded-2xl flex items-start justify-between gap-3 group/item">
+                    <div class="flex items-start gap-3">
+                      @if (anuncio.tipo.toLowerCase() === 'examen') {
+                        <span class="bg-rose-50 border border-rose-100 text-rose-700 text-[9px] font-black px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">
+                          {{ anuncio.titulo.toUpperCase() }}
+                        </span>
+                      } @else if (anuncio.tipo.toLowerCase() === 'entregado' || anuncio.tipo.toLowerCase() === 'calificacion') {
+                        <span class="bg-emerald-50 border border-emerald-100 text-emerald-700 text-[9px] font-black px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">
+                          {{ anuncio.titulo.toUpperCase() }}
+                        </span>
+                      } @else {
+                        <span class="bg-indigo-50 border border-indigo-100 text-indigo-700 text-[9px] font-black px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">
+                          {{ anuncio.titulo.toUpperCase() }}
+                        </span>
+                      }
+                      <div>
+                        <p class="text-xs text-slate-600 leading-relaxed font-medium" [innerHTML]="anuncio.mensaje"></p>
+                        <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1.5">
+                          Docente: {{ anuncio.docenteNombre }} {{ anuncio.docenteApellido }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                } @empty {
+                  <div class="p-6 text-center bg-slate-50/30 rounded-2xl border border-dashed border-slate-100">
+                    <p class="text-xs text-slate-400 font-medium">No hay anuncios publicados en tu sección.</p>
+                  </div>
+                }
               </div>
-            } @empty {
-              <div class="p-8 text-center bg-slate-50/30 rounded-2xl border border-dashed border-slate-100">
-                <p class="text-xs text-slate-400 font-medium">No hay anuncios ni novedades publicadas en tu sección.</p>
-              </div>
-            }
+              @if (anuncios().length > porPagina) {
+                <div class="mt-4 pt-4 border-t border-slate-50">
+                  <app-paginador [paginaActual]="paginaAnuncios()" [total]="anuncios().length" [porPagina]="porPagina" (paginaCambia)="paginaAnuncios.set($event)" />
+                </div>
+              }
+            </div>
+            
           </div>
         </section>
       </div>
@@ -152,10 +199,26 @@ import { Anuncio } from '../../../core/domain/models/anuncio.model';
 export class DashboardEstudianteComponent implements OnInit {
   readonly authState = inject(AuthState);
   private readonly repo = inject(EstudianteRepository);
+  private readonly comunicadosRepo = inject(ComunicadosRepository);
 
   readonly stats = signal({ porcentaje: 0, ausentes: 0, tardanzas: 0 });
   readonly fechaActual = signal<string>('');
   readonly anuncios = signal<Anuncio[]>([]);
+  readonly comunicados = signal<Comunicado[]>([]);
+
+  readonly porPagina = 3;
+
+  readonly paginaComunicados = signal(1);
+  readonly comunicadosPagina = computed(() => {
+    const start = (this.paginaComunicados() - 1) * this.porPagina;
+    return this.comunicados().slice(start, start + this.porPagina);
+  });
+
+  readonly paginaAnuncios = signal(1);
+  readonly anunciosPagina = computed(() => {
+    const start = (this.paginaAnuncios() - 1) * this.porPagina;
+    return this.anuncios().slice(start, start + this.porPagina);
+  });
 
   async ngOnInit(): Promise<void> {
     const hoy = new Date();
@@ -172,9 +235,10 @@ export class DashboardEstudianteComponent implements OnInit {
     inicio.setDate(1);
     const inicioMes = inicio.toISOString().slice(0, 10);
 
-    const [asistenciaRes, seccionId] = await Promise.all([
+    const [asistenciaRes, seccionId, comunicadosRes] = await Promise.all([
       this.repo.obtenerMiAsistencia(estudianteId, inicioMes, fechaIso),
-      this.repo.obtenerMatriculaActiva(estudianteId)
+      this.repo.obtenerMatriculaActiva(estudianteId),
+      this.comunicadosRepo.obtenerPorAudiencia('estudiantes')
     ]);
 
     if (asistenciaRes.error === null) {
@@ -190,6 +254,10 @@ export class DashboardEstudianteComponent implements OnInit {
       if (anunciosRes.error === null) {
         this.anuncios.set(anunciosRes.datos);
       }
+    }
+    
+    if (comunicadosRes.error === null) {
+      this.comunicados.set(comunicadosRes.datos);
     }
   }
 }

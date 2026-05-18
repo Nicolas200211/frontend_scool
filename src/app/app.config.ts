@@ -25,6 +25,8 @@ import { EstudianteRepository } from './estudiante/core/domain/ports/estudiante.
 import { SupabaseEstudianteRepository } from './estudiante/infrastructure/repositories/supabase-estudiante.repository';
 import { ApoderadosRepository } from './admin/core/domain/ports/apoderados.repository';
 import { SupabaseApoderadosRepository } from './admin/infrastructure/repositories/supabase-apoderados.repository';
+import { ComunicadosRepository } from './shared/domain/ports/comunicados.repository';
+import { SupabaseComunicadosRepository } from './shared/infrastructure/repositories/supabase-comunicados.repository';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -42,5 +44,6 @@ export const appConfig: ApplicationConfig = {
     { provide: PadreRepository, useClass: SupabasePadreRepository },
     { provide: EstudianteRepository, useClass: SupabaseEstudianteRepository },
     { provide: ApoderadosRepository, useClass: SupabaseApoderadosRepository },
+    { provide: ComunicadosRepository, useClass: SupabaseComunicadosRepository },
   ],
 };

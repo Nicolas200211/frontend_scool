@@ -11,6 +11,7 @@ import {
   asignaturas,
   horarios,
   anuncios,
+  comunicados,
 } from './schema/academico.schema';
 import {
   matriculas,
@@ -37,6 +38,7 @@ const runSeed = async () => {
     await db.delete(matriculas);
     await db.delete(horarios);
     await db.delete(anuncios);
+    await db.delete(comunicados);
     await db.delete(secciones);
     await db.delete(asignaturas);
     await db.delete(grados);
@@ -90,7 +92,7 @@ const runSeed = async () => {
 
     const estudiantesPerData = insertedEstudiantesUsers.map((user, i) => ({
       usuarioId: user.id,
-      codigo: `EST-2024-${(i + 1).toString().padStart(3, '0')}`,
+      codigo: `EST-2026-${(i + 1).toString().padStart(3, '0')}`,
       fechaNacimiento: `201${Math.floor((i % 8) + 0)}-0${(i % 9) + 1}-15`, // Variar fechas
       direccion: `Av. Principal ${100 + i}, Distrito`,
     }));
@@ -129,8 +131,8 @@ const runSeed = async () => {
     // Secciones (A y B por cada grado = 22 secciones totales)
     const seccionesData = [];
     for (const grado of createdGrados) {
-      seccionesData.push({ gradoId: grado.id, nombre: 'A', anioAcademico: 2024 });
-      seccionesData.push({ gradoId: grado.id, nombre: 'B', anioAcademico: 2024 });
+      seccionesData.push({ gradoId: grado.id, nombre: 'A', anioAcademico: 2026 });
+      seccionesData.push({ gradoId: grado.id, nombre: 'B', anioAcademico: 2026 });
     }
     const createdSecciones = await db.insert(secciones).values(seccionesData).returning();
 
@@ -188,17 +190,17 @@ const runSeed = async () => {
     const matriculasData = createdEstudiantes.map((est, i) => ({
       estudianteId: est.id,
       seccionId: createdSecciones[Math.floor(i / 3)].id,
-      anioAcademico: 2024,
+      anioAcademico: 2026,
       estado: 'activo' as const,
     }));
     const createdMatriculas = await db.insert(matriculas).values(matriculasData).returning();
 
     // Asistencias (simulando casos de uso)
     const asistenciasData = [
-      { matriculaId: createdMatriculas[0].id, horarioId: createdHorarios[0].id, fecha: '2024-03-04', estado: 'ausente' as const, observacion: 'Descanso médico' },
-      { matriculaId: createdMatriculas[1].id, horarioId: createdHorarios[0].id, fecha: '2024-03-04', estado: 'presente' as const, observacion: '' },
-      { matriculaId: createdMatriculas[2].id, horarioId: createdHorarios[0].id, fecha: '2024-03-04', estado: 'tardanza' as const, observacion: 'Tráfico pesado' },
-      { matriculaId: createdMatriculas[10].id, horarioId: createdHorarios[10].id, fecha: '2024-03-04', estado: 'ausente' as const, observacion: 'Motivo familiar' },
+      { matriculaId: createdMatriculas[0].id, horarioId: createdHorarios[0].id, fecha: '2026-03-04', estado: 'ausente' as const, observacion: 'Descanso médico' },
+      { matriculaId: createdMatriculas[1].id, horarioId: createdHorarios[0].id, fecha: '2026-03-04', estado: 'presente' as const, observacion: '' },
+      { matriculaId: createdMatriculas[2].id, horarioId: createdHorarios[0].id, fecha: '2026-03-04', estado: 'tardanza' as const, observacion: 'Tráfico pesado' },
+      { matriculaId: createdMatriculas[10].id, horarioId: createdHorarios[10].id, fecha: '2026-03-04', estado: 'ausente' as const, observacion: 'Motivo familiar' },
     ];
     const createdAsistencias = await db.insert(asistencia).values(asistenciasData).returning();
 
@@ -230,6 +232,22 @@ const runSeed = async () => {
       });
     }
     await db.insert(anuncios).values(anunciosSeedData);
+
+    console.log('📢 Insertando Comunicados Globales (Admin)...');
+    await db.insert(comunicados).values([
+      {
+        audiencia: 'docentes',
+        importancia: 'alta',
+        titulo: 'CIERRE DE ACTAS',
+        mensaje: 'Estimados docentes, recuerden que el cierre mensual de actas e informes académicos del mes de Mayo está programado para el día 30 de Mayo. Por favor, suban sus calificaciones.',
+      },
+      {
+        audiencia: 'todos',
+        importancia: 'informativo',
+        titulo: 'FUMIGACIÓN DEL PLANTEL',
+        mensaje: 'Se les informa a toda la comunidad educativa que el próximo viernes se realizará una fumigación general. No habrá acceso a las instalaciones después de las 2:00 PM.',
+      }
+    ]);
 
     console.log('🎉 ¡Seed ejecutado correctamente! Entorno escolar completo generado.');
   } catch (error) {

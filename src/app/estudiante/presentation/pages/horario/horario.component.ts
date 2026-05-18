@@ -25,19 +25,23 @@ const ETIQUETAS: Record<DiaSemana, string> = {
     @else if (horario().length === 0) {
       <app-empty-state titulo="Sin horario" descripcion="No tienes clases programadas asignadas" />
     } @else {
-      <div class="space-y-8">
+      <!-- Contenedor scrollable horizontal en móviles, grid de columnas en escritorio -->
+      <div class="flex overflow-x-auto pb-8 -mx-4 px-4 sm:mx-0 sm:px-0 lg:grid lg:grid-cols-5 lg:overflow-visible gap-6 items-start snap-x">
         @for (dia of diasConClases(); track dia) {
-          <section class="space-y-4">
-            <div class="flex items-center gap-2 px-1">
+          <!-- Columna por cada Día -->
+          <section class="flex-shrink-0 w-80 lg:w-auto snap-center flex flex-col">
+            <!-- Header del Día -->
+            <div class="flex items-center gap-2 px-1 mb-4 sticky top-0 bg-slate-50 py-2 z-10">
               <span class="w-1.5 h-6 bg-indigo-600 rounded-full"></span>
               <h2 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider">{{ etiquetaDia(dia) }}</h2>
+              <span class="ml-auto bg-slate-200 text-slate-600 text-[10px] font-black px-2 py-0.5 rounded-full font-mono">{{ clasesPorDia(dia).length }}</span>
             </div>
             
-            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            <!-- Lista de clases del Día -->
+            <div class="space-y-4">
               @for (h of clasesPorDia(dia); track h.id) {
                 <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col justify-between hover:shadow-md hover:border-indigo-100 hover:-translate-y-0.5 transition-all duration-200 group relative overflow-hidden">
-
-                  <div class="space-y-4">
+                  <div class="space-y-3">
                     <div class="flex items-center gap-2">
                       <div class="px-3 py-1 bg-indigo-50/60 border border-indigo-100/50 text-indigo-700 text-[10px] font-black font-mono rounded-xl shrink-0 leading-none">
                         {{ h.horaInicio }} – {{ h.horaFin }}

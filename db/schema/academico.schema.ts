@@ -67,3 +67,12 @@ export const anuncios = pgTable('anuncios', {
   mensaje: text('mensaje').notNull(),
   creadoEn: timestamp('creado_en', { withTimezone: true }).defaultNow().notNull(),
 });
+
+export const comunicados = pgTable('comunicados', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  audiencia: text('audiencia').notNull(),
+  importancia: text('importancia').notNull(),
+  titulo: text('titulo').notNull(),
+  mensaje: text('mensaje').notNull(),
+  creadoEn: timestamp('creado_en', { withTimezone: true }).defaultNow().notNull(),
+});

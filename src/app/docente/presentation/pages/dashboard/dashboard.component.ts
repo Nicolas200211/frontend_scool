@@ -2,8 +2,10 @@ import { ChangeDetectionStrategy, Component, inject, OnInit, signal, computed } 
 import { RouterLink } from '@angular/router';
 import { AsistenciaRepository } from '../../../../admin/core/domain/ports/asistencia.repository';
 import { JustificacionesRepository } from '../../../../admin/core/domain/ports/justificaciones.repository';
+import { ComunicadosRepository } from '../../../../shared/domain/ports/comunicados.repository';
 import { AuthState } from '../../../../auth/infrastructure/state/auth.state';
 import { HorarioHoy } from '../../../../admin/core/domain/models/asistencia.model';
+import { Comunicado } from '../../../../shared/domain/models/comunicado.model';
 import { PaginadorComponent } from '../../../../shared/components/paginador/paginador.component';
 
 @Component({
@@ -138,24 +140,44 @@ import { PaginadorComponent } from '../../../../shared/components/paginador/pagi
         <section class="bg-white rounded-3xl p-6 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] md:col-span-2 flex flex-col justify-between hover:shadow-md hover:border-indigo-100 hover:-translate-y-0.5 transition-all duration-200">
           <div>
             <span class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Avisos Escolares</span>
-            <h3 class="text-xl font-bold text-slate-800 mt-1 mb-2">Recordatorios Importantes</h3>
-            <p class="text-sm text-slate-500 mb-4">Mantente al día con las tareas administrativas y fechas límites del periodo académico.</p>
+            <h3 class="text-xl font-bold text-slate-800 mt-1 mb-2">Recordatorios y Comunicados</h3>
+            <p class="text-sm text-slate-500 mb-4">Mantente al día con tus tareas administrativas y los comunicados de Dirección.</p>
           </div>
 
           <div class="space-y-3">
-            <div class="p-3 bg-slate-50/50 border border-slate-100 rounded-2xl flex items-start gap-3">
-              <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">PENDIENTE</span>
-              @if (justificacionesPendientes() > 0) {
-                <p class="text-xs text-slate-600 leading-relaxed">Tienes <strong>{{ justificacionesPendientes() }} solicitudes de justificación</strong> por evaluar en la bandeja de entrada.</p>
-              } @else {
-                <p class="text-xs text-slate-600 leading-relaxed">No tienes solicitudes de justificación pendientes por evaluar. ¡Todo al día!</p>
-              }
-            </div>
-            <div class="p-3 bg-slate-50/50 border border-slate-100 rounded-2xl flex items-start gap-3">
-              <span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">AVISO</span>
-              <p class="text-xs text-slate-600 leading-relaxed">El cierre mensual de actas e informes académicos del mes de Mayo está programado para el día <strong>30 de Mayo</strong>.</p>
-            </div>
+            @if (paginaComunicados() === 1) {
+              <div class="p-3 bg-slate-50/50 border border-slate-100 rounded-2xl flex items-start gap-3">
+                <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">PENDIENTE</span>
+                @if (justificacionesPendientes() > 0) {
+                  <p class="text-xs text-slate-600 leading-relaxed">Tienes <strong>{{ justificacionesPendientes() }} solicitudes de justificación</strong> por evaluar en la bandeja de entrada.</p>
+                } @else {
+                  <p class="text-xs text-slate-600 leading-relaxed">No tienes solicitudes de justificación pendientes por evaluar. ¡Todo al día!</p>
+                }
+              </div>
+            }
+
+            @for (c of comunicadosPagina(); track c.id) {
+              <div class="p-3 bg-slate-50/50 border border-slate-100 rounded-2xl flex items-start gap-3">
+                @if (c.importancia === 'alta') {
+                  <span class="bg-rose-100 text-rose-800 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">URGENTE</span>
+                } @else if (c.importancia === 'informativo') {
+                  <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">ÉXITO</span>
+                } @else {
+                  <span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">AVISO</span>
+                }
+                <div>
+                  <p class="text-xs font-bold text-slate-800">{{ c.titulo }}</p>
+                  <p class="text-xs text-slate-600 leading-relaxed mt-0.5">{{ c.mensaje }}</p>
+                </div>
+              </div>
+            }
           </div>
+
+          @if (comunicados().length > porPagina) {
+            <div class="mt-4 pt-4 border-t border-slate-50">
+              <app-paginador [paginaActual]="paginaComunicados()" [total]="comunicados().length" [porPagina]="porPagina" (paginaCambia)="paginaComunicados.set($event)" />
+            </div>
+          }
         </section>
       </div>
     </div>
@@ -165,17 +187,26 @@ export class DashboardDocenteComponent implements OnInit {
   readonly authState = inject(AuthState);
   private readonly repo = inject(AsistenciaRepository);
   private readonly justificacionesRepo = inject(JustificacionesRepository);
+  private readonly comunicadosRepo = inject(ComunicadosRepository);
 
   readonly cargando = signal(true);
   readonly clases = signal<HorarioHoy[]>([]);
   readonly fechaActual = signal<string>('');
   readonly justificacionesPendientes = signal<number>(0);
+  readonly comunicados = signal<Comunicado[]>([]);
 
   readonly porPagina = 3;
+  
   readonly pagina = signal(1);
   readonly clasesPagina = computed(() => {
     const start = (this.pagina() - 1) * this.porPagina;
     return this.clases().slice(start, start + this.porPagina);
+  });
+
+  readonly paginaComunicados = signal(1);
+  readonly comunicadosPagina = computed(() => {
+    const start = (this.paginaComunicados() - 1) * this.porPagina;
+    return this.comunicados().slice(start, start + this.porPagina);
   });
 
   get clasesTomadas(): () => number {
@@ -194,9 +225,10 @@ export class DashboardDocenteComponent implements OnInit {
 
     const fechaIso = hoy.toISOString().slice(0, 10);
     
-    const [horarioRes, justificacionesRes] = await Promise.all([
+    const [horarioRes, justificacionesRes, comunicadosRes] = await Promise.all([
       this.repo.obtenerHorariosHoy(docenteId, fechaIso),
-      this.justificacionesRepo.obtenerPorDocente(docenteId)
+      this.justificacionesRepo.obtenerPorDocente(docenteId),
+      this.comunicadosRepo.obtenerPorAudiencia('docentes')
     ]);
 
     this.cargando.set(false);
@@ -205,6 +237,10 @@ export class DashboardDocenteComponent implements OnInit {
     if (justificacionesRes.error === null) {
       const count = justificacionesRes.datos.filter((j) => j.estado === 'pendiente').length;
       this.justificacionesPendientes.set(count);
+    }
+    
+    if (comunicadosRes.error === null) {
+      this.comunicados.set(comunicadosRes.datos);
     }
   }
 }
