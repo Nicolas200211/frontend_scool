@@ -27,70 +27,72 @@ import { BuscadorComponent } from '../../../../shared/components/buscador/buscad
   template: `
     <app-page-header titulo="Justificaciones" subtitulo="Revisión y aprobación de inasistencias justificadas" />
  
-    <!-- Top Action Bar -->
-    <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-wrap justify-between items-center gap-4 mb-6">
-      <div class="flex items-center gap-4 w-full sm:w-auto flex-1 max-w-md">
-        <app-buscador placeholder="Buscar justificación..." (busquedaCambia)="filtro.set($event); pagina.set(1)" />
+    <div class="max-w-4xl mx-auto space-y-6">
+      <!-- Top Action Bar -->
+      <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-wrap justify-between items-center gap-4">
+        <div class="flex items-center gap-4 w-full sm:w-auto flex-1 max-w-md">
+          <app-buscador placeholder="Buscar justificación..." (busquedaCambia)="filtro.set($event); pagina.set(1)" />
+        </div>
       </div>
-    </div>
 
-    @if (cargando()) { <app-loading-spinner /> }
-    @else if (justificacionesFiltradas().length === 0) {
-      <app-empty-state titulo="Sin justificaciones" descripcion="No se encontraron justificaciones que coincidan con la búsqueda." />
-    } @else {
-      <!-- Bento List Card Grid -->
-      <div class="space-y-4 mb-6">
-        @for (j of justificacionesPagina(); track j.id) {
-          <article class="bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] p-6 hover:shadow-md hover:border-indigo-100 transition-all duration-200">
-            <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
-              
-              <div class="flex-1 min-w-0">
-                <div class="flex flex-wrap items-center gap-2 mb-2">
-                  <h3 class="font-extrabold text-slate-800 text-sm leading-snug">{{ j.estudianteApellido }}, {{ j.estudianteNombre }}</h3>
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border capitalize tracking-wider font-mono" [class]="colorEstado(j.estado)">
-                    {{ j.estado }}
-                  </span>
-                </div>
+      @if (cargando()) { <app-loading-spinner /> }
+      @else if (justificacionesFiltradas().length === 0) {
+        <app-empty-state titulo="Sin justificaciones" descripcion="No se encontraron justificaciones que coincidan con la búsqueda." />
+      } @else {
+        <!-- Bento List Card Grid -->
+        <div class="space-y-4">
+          @for (j of justificacionesPagina(); track j.id) {
+            <article class="bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] p-6 hover:shadow-md hover:border-indigo-100 transition-all duration-200">
+              <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
                 
-                <div class="flex flex-wrap gap-2 text-xs font-semibold text-slate-400 mb-3 font-mono">
-                  <span class="inline-flex items-center px-2 py-0.5 bg-slate-50 border border-slate-100 rounded-lg text-slate-500 font-bold">
-                    {{ j.asignaturaNombre }}
-                  </span>
-                  <span class="inline-flex items-center px-2 py-0.5 bg-slate-50 border border-slate-100 rounded-lg text-slate-500 font-bold">
-                    {{ j.fecha }}
-                  </span>
+                <div class="flex-1 min-w-0">
+                  <div class="flex flex-wrap items-center gap-2 mb-2">
+                    <h3 class="font-extrabold text-slate-800 text-sm leading-snug">{{ j.estudianteApellido }}, {{ j.estudianteNombre }}</h3>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border capitalize tracking-wider font-mono" [class]="colorEstado(j.estado)">
+                      {{ j.estado }}
+                    </span>
+                  </div>
+                  
+                  <div class="flex flex-wrap gap-2 text-xs font-semibold text-slate-400 mb-3 font-mono">
+                    <span class="inline-flex items-center px-2 py-0.5 bg-slate-50 border border-slate-100 rounded-lg text-slate-500 font-bold">
+                      {{ j.asignaturaNombre }}
+                    </span>
+                    <span class="inline-flex items-center px-2 py-0.5 bg-slate-50 border border-slate-100 rounded-lg text-slate-500 font-bold">
+                      {{ j.fecha }}
+                    </span>
+                  </div>
+
+                  <div class="bg-slate-50/50 rounded-2xl p-4 border border-slate-100/50 mb-3">
+                    <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono text-[9px]">Motivo justificado</p>
+                    <p class="text-xs font-semibold text-slate-700 leading-relaxed">{{ j.motivo }}</p>
+                  </div>
+                  
+                  <p class="text-[10px] font-extrabold text-slate-400 font-mono">Apoderado responsable: {{ j.apoderadoNombre }}</p>
                 </div>
 
-                <div class="bg-slate-50/50 rounded-2xl p-4 border border-slate-100/50 mb-3">
-                  <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 font-mono text-[9px]">Motivo justificado</p>
-                  <p class="text-xs font-semibold text-slate-700 leading-relaxed">{{ j.motivo }}</p>
-                </div>
+                @if (j.estado === 'pendiente') {
+                  <div class="flex md:flex-col lg:flex-row gap-2 shrink-0 self-end md:self-start">
+                    <button (click)="cambiarEstado(j.id, 'aprobado')"
+                      class="px-4 py-2.5 text-xs font-black text-white bg-indigo-600 hover:bg-indigo-700 rounded-2xl shadow-sm transition-all duration-150 hover:-translate-y-0.5">
+                      Aprobar
+                    </button>
+                    <button (click)="cambiarEstado(j.id, 'rechazado')"
+                      class="px-4 py-2.5 text-xs font-black text-slate-700 bg-white border border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 rounded-2xl transition-all duration-150">
+                      Rechazar
+                    </button>
+                  </div>
+                }
                 
-                <p class="text-[10px] font-extrabold text-slate-400 font-mono">Apoderado responsable: {{ j.apoderadoNombre }}</p>
               </div>
+            </article>
+          }
+        </div>
 
-              @if (j.estado === 'pendiente') {
-                <div class="flex md:flex-col lg:flex-row gap-2 shrink-0 self-end md:self-start">
-                  <button (click)="cambiarEstado(j.id, 'aprobado')"
-                    class="px-4 py-2.5 text-xs font-black text-white bg-indigo-600 hover:bg-indigo-700 rounded-2xl shadow-sm transition-all duration-150 hover:-translate-y-0.5">
-                    Aprobar
-                  </button>
-                  <button (click)="cambiarEstado(j.id, 'rechazado')"
-                    class="px-4 py-2.5 text-xs font-black text-slate-700 bg-white border border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 rounded-2xl transition-all duration-150">
-                    Rechazar
-                  </button>
-                </div>
-              }
-              
-            </div>
-          </article>
-        }
-      </div>
-
-      <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
-        <app-paginador [paginaActual]="pagina()" [total]="justificacionesFiltradas().length" [porPagina]="porPagina" (paginaCambia)="pagina.set($event)" />
-      </div>
-    }
+        <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
+          <app-paginador [paginaActual]="pagina()" [total]="justificacionesFiltradas().length" [porPagina]="porPagina" (paginaCambia)="pagina.set($event)" />
+        </div>
+      }
+    </div>
   `,
 })
 export class JustificacionesDocenteComponent implements OnInit {
