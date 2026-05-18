@@ -59,8 +59,21 @@ import { BuscadorComponent } from '../../../../shared/components/buscador/buscad
                     </span>
                   </td>
                   <td class="px-6 py-4">
-                    <p class="font-extrabold text-slate-800 text-sm">{{ e.nombre }} {{ e.apellido }}</p>
-                    <p class="text-[9px] text-slate-400 font-mono font-bold uppercase tracking-wider mt-0.5">Estudiante ID: {{ e.id }}</p>
+                    <div class="flex items-center gap-3">
+                      @if (e.fotoUrl) {
+                        <img [src]="e.fotoUrl" alt="Avatar" class="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-100 shadow-sm" />
+                      } @else {
+                        <div class="w-8 h-8 bg-indigo-50 border border-indigo-100 rounded-full flex items-center justify-center shrink-0">
+                          <span class="text-[10px] font-bold text-indigo-700 uppercase">
+                            {{ e.nombre[0] }}{{ e.apellido[0] }}
+                          </span>
+                        </div>
+                      }
+                      <div>
+                        <p class="font-extrabold text-slate-800 text-sm leading-none">{{ e.nombre }} {{ e.apellido }}</p>
+                        <p class="text-[9px] text-slate-400 font-mono font-bold uppercase tracking-wider mt-1">Estudiante ID: {{ e.id }}</p>
+                      </div>
+                    </div>
                   </td>
                   <td class="px-6 py-4 text-slate-500 font-semibold font-mono text-xs">{{ e.email }}</td>
                   <td class="px-6 py-4 text-slate-500 font-bold font-mono text-xs">{{ e.fechaNacimiento ?? '—' }}</td>

@@ -55,8 +55,21 @@ import { BuscadorComponent } from '../../../../shared/components/buscador/buscad
                @for (d of docentesPagina(); track d.id) {
                 <tr class="hover:bg-slate-50/30 transition duration-150">
                   <td class="px-6 py-4">
-                    <p class="font-extrabold text-slate-800 text-sm">{{ d.nombre }} {{ d.apellido }}</p>
-                    <p class="text-[9px] text-slate-400 font-mono font-bold uppercase tracking-wider mt-0.5">Docente ID: {{ d.id }}</p>
+                    <div class="flex items-center gap-3">
+                      @if (d.fotoUrl) {
+                        <img [src]="d.fotoUrl" alt="Avatar" class="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-100 shadow-sm" />
+                      } @else {
+                        <div class="w-8 h-8 bg-indigo-50 border border-indigo-100 rounded-full flex items-center justify-center shrink-0">
+                          <span class="text-[10px] font-bold text-indigo-700 uppercase">
+                            {{ d.nombre[0] }}{{ d.apellido[0] }}
+                          </span>
+                        </div>
+                      }
+                      <div>
+                        <p class="font-extrabold text-slate-800 text-sm leading-none">{{ d.nombre }} {{ d.apellido }}</p>
+                        <p class="text-[9px] text-slate-400 font-mono font-bold uppercase tracking-wider mt-1">Docente ID: {{ d.id }}</p>
+                      </div>
+                    </div>
                   </td>
                   <td class="px-6 py-4 text-slate-500 font-semibold font-mono text-xs">{{ d.email }}</td>
                   <td class="px-6 py-4">

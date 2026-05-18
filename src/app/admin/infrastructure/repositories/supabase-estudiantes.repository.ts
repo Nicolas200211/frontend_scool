@@ -10,7 +10,7 @@ export class SupabaseEstudiantesRepository implements EstudiantesRepository {
 
   async obtenerTodos(): Promise<RespuestaApi<Estudiante[]>> {
     const { data, error } = await this.supabase
-      .from('estudiantes').select('*, usuarios(nombre, apellido, email)').order('codigo');
+      .from('estudiantes').select('*, usuarios(nombre, apellido, email, foto_url)').order('codigo');
     if (error) return { datos: null, error: error.message };
     return { datos: (data ?? []).map(this.mapear), error: null };
   }
@@ -29,7 +29,7 @@ export class SupabaseEstudiantesRepository implements EstudiantesRepository {
         usuario_id: usuarioId, codigo: dto.codigo,
         fecha_nacimiento: dto.fechaNacimiento ?? null, direccion: dto.direccion ?? null,
       })
-      .select('*, usuarios(nombre, apellido, email)').single();
+      .select('*, usuarios(nombre, apellido, email, foto_url)').single();
     if (error) return { datos: null, error: error.message };
     return { datos: this.mapear(data), error: null };
   }
@@ -37,7 +37,7 @@ export class SupabaseEstudiantesRepository implements EstudiantesRepository {
   async actualizar(id: string, dto: Partial<CrearEstudianteDto>): Promise<RespuestaApi<Estudiante>> {
     const { data, error } = await this.supabase
       .from('estudiantes').update({ codigo: dto.codigo, fecha_nacimiento: dto.fechaNacimiento, direccion: dto.direccion })
-      .eq('id', id).select('*, usuarios(nombre, apellido, email)').single();
+      .eq('id', id).select('*, usuarios(nombre, apellido, email, foto_url)').single();
     if (error) return { datos: null, error: error.message };
     return { datos: this.mapear(data), error: null };
   }
@@ -51,7 +51,8 @@ export class SupabaseEstudiantesRepository implements EstudiantesRepository {
   private mapear(r: any): Estudiante {
     return {
       id: r.id, usuarioId: r.usuario_id, codigo: r.codigo,
-      fechaNacimiento: r.fecha_nacimiento, direccion: r.direccion, fotoUrl: r.foto_url,
+      fechaNacimiento: r.fecha_nacimiento, direccion: r.direccion,
+      fotoUrl: r.usuarios?.foto_url || r.usuarios?.fotoUrl || null,
       nombre: r.usuarios?.nombre ?? '', apellido: r.usuarios?.apellido ?? '',
       email: r.usuarios?.email ?? '', creadoEn: r.creado_en,
     };

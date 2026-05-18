@@ -5,6 +5,7 @@ export interface Docente {
   nombre: string;
   apellido: string;
   email: string;
+  fotoUrl: string | null;
   creadoEn: string;
 }
 

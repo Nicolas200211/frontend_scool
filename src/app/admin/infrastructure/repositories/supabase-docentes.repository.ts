@@ -10,7 +10,7 @@ export class SupabaseDocentesRepository implements DocentesRepository {
 
   async obtenerTodos(): Promise<RespuestaApi<Docente[]>> {
     const { data, error } = await this.supabase
-      .from('docentes').select('*, usuarios(nombre, apellido, email)').order('creado_en');
+      .from('docentes').select('*, usuarios(nombre, apellido, email, foto_url)').order('creado_en');
     if (error) return { datos: null, error: error.message };
     return { datos: (data ?? []).map(this.mapear), error: null };
   }
@@ -26,7 +26,7 @@ export class SupabaseDocentesRepository implements DocentesRepository {
     const usuarioId = (rpcData as any).id;
     const { data, error } = await this.supabase
       .from('docentes').insert({ usuario_id: usuarioId, especialidad: dto.especialidad ?? null })
-      .select('*, usuarios(nombre, apellido, email)').single();
+      .select('*, usuarios(nombre, apellido, email, foto_url)').single();
     if (error) return { datos: null, error: error.message };
     return { datos: this.mapear(data), error: null };
   }
@@ -34,7 +34,7 @@ export class SupabaseDocentesRepository implements DocentesRepository {
   async actualizar(id: string, especialidad: string): Promise<RespuestaApi<Docente>> {
     const { data, error } = await this.supabase
       .from('docentes').update({ especialidad })
-      .eq('id', id).select('*, usuarios(nombre, apellido, email)').single();
+      .eq('id', id).select('*, usuarios(nombre, apellido, email, foto_url)').single();
     if (error) return { datos: null, error: error.message };
     return { datos: this.mapear(data), error: null };
   }
@@ -49,7 +49,9 @@ export class SupabaseDocentesRepository implements DocentesRepository {
     return {
       id: r.id, usuarioId: r.usuario_id, especialidad: r.especialidad,
       nombre: r.usuarios?.nombre ?? '', apellido: r.usuarios?.apellido ?? '',
-      email: r.usuarios?.email ?? '', creadoEn: r.creado_en,
+      email: r.usuarios?.email ?? '',
+      fotoUrl: r.usuarios?.foto_url || r.usuarios?.fotoUrl || null,
+      creadoEn: r.creado_en,
     };
   }
 }
