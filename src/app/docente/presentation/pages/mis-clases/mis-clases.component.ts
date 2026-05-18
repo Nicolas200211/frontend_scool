@@ -109,24 +109,24 @@ interface HorarioClase {
 
           <form (submit)="publicarAnuncio($event)" class="p-6 space-y-4">
             <div class="space-y-1.5">
-              <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tipo de Aviso</label>
+              <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Importancia del Aviso</label>
               <select name="tipo" required
                 class="w-full px-4 py-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200 text-sm font-semibold text-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all cursor-pointer">
-                <option value="examen">EXAMEN (Fondo Rojo)</option>
-                <option value="entregado">ENTREGADO / TAREA (Fondo Verde)</option>
-                <option value="aviso">AVISO GENERAL (Fondo Azul)</option>
+                <option value="aviso">Aviso General (Normal)</option>
+                <option value="examen">Alta / Urgente (Destacado)</option>
+                <option value="entregado">Positivo / Tarea (Éxito)</option>
               </select>
             </div>
 
             <div class="space-y-1.5">
-              <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Etiqueta/Título</label>
-              <input type="text" name="titulo" placeholder="Ej: EXAMEN, TAREA, AVISO" required
+              <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Título / Etiqueta del Aviso</label>
+              <input type="text" name="titulo" placeholder="Ej: REUNIÓN, MATERIAL, TAREA, IMPORTANTE" required
                 class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all" />
             </div>
 
             <div class="space-y-1.5">
-              <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Mensaje / Contenido</label>
-              <textarea name="mensaje" rows="4" placeholder="Redacta el mensaje aquí. Puedes usar HTML como <strong>negrita</strong>." required
+              <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Mensaje Completo</label>
+              <textarea name="mensaje" rows="4" placeholder="Redacta el contenido de tu aviso para la clase aquí..." required
                 class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"></textarea>
             </div>
 
