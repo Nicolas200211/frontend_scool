@@ -61,7 +61,7 @@ import { BuscadorComponent } from '../../../../shared/components/buscador/buscad
                   <td class="px-6 py-4">
                     <div class="flex items-center gap-3">
                       @if (e.fotoUrl) {
-                        <img [src]="e.fotoUrl" alt="Avatar" class="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-100 shadow-sm" />
+                        <img [src]="e.fotoUrl" (click)="fotoAmpliada.set(e.fotoUrl)" alt="Avatar" class="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-100 shadow-sm cursor-zoom-in hover:scale-110 active:scale-95 transition-all duration-200" />
                       } @else {
                         <div class="w-8 h-8 bg-indigo-50 border border-indigo-100 rounded-full flex items-center justify-center shrink-0">
                           <span class="text-[10px] font-bold text-indigo-700 uppercase">
@@ -182,6 +182,19 @@ import { BuscadorComponent } from '../../../../shared/components/buscador/buscad
         </form>
       </app-modal>
     }
+
+    @if (fotoAmpliada()) {
+      <div (click)="fotoAmpliada.set(null)" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 transition-all duration-300 animate-in fade-in">
+        <div class="relative max-w-md w-full flex flex-col items-center" (click)="$event.stopPropagation()">
+          <button (click)="fotoAmpliada.set(null)" class="absolute -top-12 right-0 p-2 text-white/80 hover:text-white bg-slate-900/40 hover:bg-slate-900/60 backdrop-blur-sm rounded-full transition duration-150 shadow-md">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+          <img [src]="fotoAmpliada()!" alt="Foto ampliada" class="max-w-full max-h-[75vh] rounded-3xl object-contain border-4 border-white shadow-2xl animate-in zoom-in-95 duration-200" />
+        </div>
+      </div>
+    }
   `,
 })
 export class EstudiantesComponent implements OnInit {
@@ -197,6 +210,7 @@ export class EstudiantesComponent implements OnInit {
   readonly modalEditar = signal(false);
   readonly pagina = signal(1);
   readonly filtro = signal<string>('');
+  readonly fotoAmpliada = signal<string | null>(null);
   private readonly editandoId = signal<string | null>(null);
 
   readonly estudiantesFiltrados = computed(() => {
