@@ -99,7 +99,7 @@ const NAVEGACION: Record<Rol, ItemNavegacion[]> = {
           <button (click)="abrirPerfilModal()"
             class="w-full flex items-center gap-3 bg-slate-50/50 hover:bg-indigo-50/40 border border-slate-100/70 hover:border-indigo-100/50 p-3 rounded-2xl mb-3 shadow-[0_8px_30px_rgb(0,0,0,0.01)] text-left transition duration-150 group">
             
-            @if (fotoUrlUsuario()) {
+            @if (esFotoValida(fotoUrlUsuario())) {
               <img [src]="fotoUrlUsuario()" alt="Avatar" class="w-9 h-9 rounded-full object-cover shrink-0 border border-indigo-100 shadow-sm" />
             } @else {
               <div class="w-9 h-9 bg-indigo-50 border border-indigo-100 rounded-full flex items-center justify-center shrink-0">
@@ -159,7 +159,7 @@ const NAVEGACION: Record<Rol, ItemNavegacion[]> = {
           
           <div class="flex flex-col items-center justify-center text-center space-y-2">
             <div class="relative group">
-              @if (fotoUrlTemp()) {
+              @if (esFotoValida(fotoUrlTemp())) {
                 <img [src]="fotoUrlTemp()" alt="Vista previa avatar" class="w-20 h-20 rounded-full object-cover border-2 border-indigo-600 shadow-md" />
               } @else {
                 <div class="w-20 h-20 bg-indigo-50 border-2 border-indigo-100 rounded-full flex items-center justify-center shadow-inner">
@@ -271,6 +271,12 @@ export class MainLayoutComponent {
   readonly fotoUrlUsuario = computed(() => {
     return this.authState.usuarioActual()?.fotoUrl ?? null;
   });
+
+  esFotoValida(url: string | null | undefined): boolean {
+    if (!url) return false;
+    const cleanUrl = String(url).trim();
+    return cleanUrl !== '' && cleanUrl !== 'null' && cleanUrl !== 'undefined';
+  }
 
   readonly inicialesUsuario = computed(() => {
     const usuario = this.authState.usuarioActual();
