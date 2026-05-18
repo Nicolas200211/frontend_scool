@@ -20,6 +20,7 @@ const ESTADOS: { valor: EstadoAsistencia; etiqueta: string; claseActiva: string 
 interface FilaAsistencia extends RegistroAsistencia {
   estadoSeleccionado: EstadoAsistencia;
   observacionTexto: string;
+  fotoUrl?: string | null;
 }
 
 @Component({
@@ -225,16 +226,19 @@ export class AsistenciaDocenteComponent implements OnInit {
     const r = await this.repo.obtenerListaAsistencia(clase.id, this.fecha);
     this.cargandoLista.set(false);
     if (r.error !== null) { toast.error(r.error); return; }
-    this.filas.set(r.datos.map((registro) => ({
-      ...registro,
-      estadoSeleccionado: registro.estado ?? 'presente',
-      observacionTexto: registro.observacion ?? '',
-    })));
+    this.filas.set(
+      r.datos.map(registro => ({
+        ...registro,
+        estadoSeleccionado: registro.estado ?? 'presente',
+        observacionTexto: registro.observacion ?? '',
+        fotoUrl: (registro as any).fotoUrl ?? null // map student photo URL
+      }))
+    );
   }
 
-  volverAClases(): void { 
-    this.claseSeleccionada.set(null); 
-    this.filas.set([]); 
+  volverAClases(): void {
+    this.claseSeleccionada.set(null);
+    this.filas.set([]);
     this.paginaAlumnos.set(1);
   }
 
