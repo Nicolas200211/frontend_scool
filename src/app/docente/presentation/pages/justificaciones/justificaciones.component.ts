@@ -39,50 +39,50 @@ import { BuscadorComponent } from '../../../../shared/components/buscador/buscad
       <app-empty-state titulo="Sin justificaciones" descripcion="No se encontraron justificaciones que coincidan con la búsqueda." />
     } @else {
       <!-- Bento Cards Grid -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-6">
         @for (j of justificacionesPagina(); track j.id) {
-          <article class="bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] p-6 hover:shadow-md hover:border-indigo-100 transition-all duration-200 flex flex-col justify-between min-h-[340px]">
+          <article class="bg-white rounded-2xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] p-5 hover:shadow-md hover:border-indigo-100 transition-all duration-200 flex flex-col justify-between">
             
-            <div class="space-y-4">
+            <div class="space-y-3">
               <header class="flex items-start justify-between gap-3">
                 <div class="min-w-0">
-                  <h3 class="font-extrabold text-slate-800 text-sm leading-snug break-words">
+                  <h3 class="font-extrabold text-slate-800 text-xs leading-snug break-words">
                     {{ j.estudianteApellido }}, {{ j.estudianteNombre }}
                   </h3>
                 </div>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border capitalize tracking-wider font-mono shrink-0" [class]="colorEstado(j.estado)">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold border capitalize tracking-wider font-mono shrink-0" [class]="colorEstado(j.estado)">
                   {{ j.estado }}
                 </span>
               </header>
               
-              <div class="flex flex-wrap gap-2 text-xs font-semibold text-slate-400 font-mono">
-                <span class="inline-flex items-center px-2 py-0.5 bg-slate-50 border border-slate-100 rounded-lg text-slate-500 font-bold">
+              <div class="flex flex-wrap gap-1.5 text-[10px] font-extrabold text-slate-400 font-mono">
+                <span class="inline-flex items-center px-2 py-0.5 bg-slate-50 border border-slate-100 rounded-lg text-slate-500">
                   {{ j.asignaturaNombre }}
                 </span>
-                <span class="inline-flex items-center px-2 py-0.5 bg-slate-50 border border-slate-100 rounded-lg text-slate-500 font-bold font-mono">
+                <span class="inline-flex items-center px-2 py-0.5 bg-slate-50 border border-slate-100 rounded-lg text-slate-500 font-mono">
                   {{ j.fecha }}
                 </span>
               </div>
 
-              <div class="bg-slate-50/50 rounded-2xl p-4 border border-slate-100/50">
-                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1 font-mono">Motivo justificado</p>
-                <p class="text-xs font-semibold text-slate-700 leading-relaxed break-words line-clamp-4">{{ j.motivo }}</p>
+              <div class="bg-slate-50/50 rounded-xl p-3 border border-slate-100/50">
+                <span class="block text-[8px] font-black text-slate-400 uppercase tracking-wider mb-1 font-mono">Motivo</span>
+                <p class="text-xs font-semibold text-slate-600 leading-relaxed break-words line-clamp-3">{{ j.motivo }}</p>
               </div>
             </div>
 
-            <div class="mt-4 pt-3 border-t border-slate-50 space-y-3">
-              <p class="text-[10px] font-extrabold text-slate-400 font-mono truncate">
+            <div class="mt-3 pt-3 border-t border-slate-50 space-y-2">
+              <p class="text-[9px] font-extrabold text-slate-400 font-mono truncate">
                 Apoderado: {{ j.apoderadoNombre }}
               </p>
 
               @if (j.estado === 'pendiente') {
-                <div class="flex gap-2 w-full">
+                <div class="flex gap-2 w-full pt-1">
                   <button (click)="cambiarEstado(j.id, 'aprobado')"
-                    class="flex-1 px-3 py-2 text-xs font-black text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm transition-all duration-150 hover:-translate-y-0.5 text-center">
+                    class="flex-1 py-1.5 text-[10px] font-black text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm transition-all duration-150 hover:-translate-y-0.5 text-center">
                     Aprobar
                   </button>
                   <button (click)="cambiarEstado(j.id, 'rechazado')"
-                    class="flex-1 px-3 py-2 text-xs font-black text-slate-700 bg-white border border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 rounded-xl transition-all duration-150 text-center">
+                    class="flex-1 py-1.5 text-[10px] font-black text-slate-700 bg-white border border-slate-200 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-100 rounded-lg transition-all duration-150 text-center">
                     Rechazar
                   </button>
                 </div>
