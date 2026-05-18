@@ -108,7 +108,7 @@ interface FilaAsistencia extends RegistroAsistencia {
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-50">
-                @for (fila of filas(); track fila.matriculaId) {
+                @for (fila of filasPagina(); track fila.matriculaId) {
                   <tr class="hover:bg-slate-50/30 transition duration-150">
                     <td class="px-6 py-4 shrink-0">
                       <p class="font-extrabold text-slate-800">{{ fila.estudianteApellido }}, {{ fila.estudianteNombre }}</p>
@@ -135,6 +135,10 @@ interface FilaAsistencia extends RegistroAsistencia {
                 }
               </tbody>
             </table>
+          </div>
+
+          <div class="p-4 border-t border-slate-50">
+            <app-paginador [paginaActual]="paginaAlumnos()" [total]="filas().length" [porPagina]="porPaginaAlumnos" (paginaCambia)="paginaAlumnos.set($event)" />
           </div>
         </div>
         
@@ -173,6 +177,13 @@ export class AsistenciaDocenteComponent implements OnInit {
     return this.clasesHoy().slice(start, start + this.porPagina);
   });
 
+  readonly paginaAlumnos = signal(1);
+  readonly porPaginaAlumnos = 10;
+  readonly filasPagina = computed(() => {
+    const start = (this.paginaAlumnos() - 1) * this.porPaginaAlumnos;
+    return this.filas().slice(start, start + this.porPaginaAlumnos);
+  });
+
   readonly clasesHoy = signal<HorarioHoy[]>([]);
   readonly claseSeleccionada = signal<HorarioHoy | null>(null);
   readonly filas = signal<FilaAsistencia[]>([]);
@@ -199,6 +210,7 @@ export class AsistenciaDocenteComponent implements OnInit {
 
   async seleccionarClase(clase: HorarioHoy): Promise<void> {
     this.claseSeleccionada.set(clase);
+    this.paginaAlumnos.set(1);
     this.cargandoLista.set(true);
     const r = await this.repo.obtenerListaAsistencia(clase.id, this.fecha);
     this.cargandoLista.set(false);
@@ -210,7 +222,11 @@ export class AsistenciaDocenteComponent implements OnInit {
     })));
   }
 
-  volverAClases(): void { this.claseSeleccionada.set(null); this.filas.set([]); }
+  volverAClases(): void { 
+    this.claseSeleccionada.set(null); 
+    this.filas.set([]); 
+    this.paginaAlumnos.set(1);
+  }
 
   cambiarEstado(fila: FilaAsistencia, estado: EstadoAsistencia): void {
     this.filas.update((lista) => lista.map((f) => f.matriculaId === fila.matriculaId ? { ...f, estadoSeleccionado: estado } : f));
