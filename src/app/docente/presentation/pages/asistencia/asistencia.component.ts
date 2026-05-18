@@ -114,7 +114,7 @@ interface FilaAsistencia extends RegistroAsistencia {
                 @for (fila of filasPagina(); track fila.matriculaId) {
                   <tr class="hover:bg-slate-50/30 transition duration-150">
                     <td class="px-6 py-4">
-                       <img *ngIf="fila.fotoUrl; else sinFoto" [src]="fila.fotoUrl" alt="Foto {{ fila.estudianteNombre }} {{ fila.estudianteApellido }}" class="w-12 h-12 rounded-full object-cover border-2 border-indigo-100 shadow-lg" />
+                       <img *ngIf="fila.fotoUrl; else sinFoto" [src]="fila.fotoUrl" (click)="fotoAmpliada.set(fila.fotoUrl)" alt="Foto {{ fila.estudianteNombre }} {{ fila.estudianteApellido }}" class="w-12 h-12 rounded-full object-cover border-2 border-indigo-100 shadow-lg cursor-zoom-in hover:scale-110 active:scale-95 transition-all duration-200" />
                        <ng-template #sinFoto>
                          <div class="w-12 h-12 flex items-center justify-center bg-slate-200 rounded-full text-slate-500">
                            📸
@@ -171,6 +171,19 @@ interface FilaAsistencia extends RegistroAsistencia {
         </div>
       }
     }
+
+    @if (fotoAmpliada()) {
+      <div (click)="fotoAmpliada.set(null)" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 transition-all duration-300 animate-in fade-in">
+        <div class="relative max-w-md w-full flex flex-col items-center" (click)="$event.stopPropagation()">
+          <button (click)="fotoAmpliada.set(null)" class="absolute -top-12 right-0 p-2 text-white/80 hover:text-white bg-slate-900/40 hover:bg-slate-900/60 backdrop-blur-sm rounded-full transition duration-150 shadow-md">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+          <img [src]="fotoAmpliada()!" alt="Foto ampliada" class="max-w-full max-h-[75vh] rounded-3xl object-contain border-4 border-white shadow-2xl animate-in zoom-in-95 duration-200" />
+        </div>
+      </div>
+    }
   `,
 })
 export class AsistenciaDocenteComponent implements OnInit {
@@ -181,6 +194,7 @@ export class AsistenciaDocenteComponent implements OnInit {
   readonly cargandoClases = signal(true);
   readonly cargandoLista = signal(false);
   readonly guardando = signal(false);
+  readonly fotoAmpliada = signal<string | null>(null);
   readonly porPagina = 8;
   readonly pagina = signal(1);
   readonly clasesHoyPagina = computed(() => {
