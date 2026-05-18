@@ -64,10 +64,23 @@ import { BuscadorComponent } from '../../../../shared/components/buscador/buscad
               @for (m of matriculasPagina(); track m.id) {
                 <tr class="hover:bg-slate-50/30 transition duration-150">
                   <td class="px-6 py-4">
-                    <p class="font-extrabold text-slate-800 text-sm">{{ m.estudianteNombre }} {{ m.estudianteApellido }}</p>
-                    <span class="inline-block mt-1 font-mono text-[10px] font-bold text-slate-500 bg-slate-50 border border-slate-100 rounded-xl px-2 py-0.5">
-                      {{ m.estudianteCodigo }}
-                    </span>
+                    <div class="flex items-center gap-3">
+                      @if (m.estudianteFotoUrl) {
+                        <img [src]="m.estudianteFotoUrl" (click)="fotoAmpliada.set(m.estudianteFotoUrl)" alt="Avatar" class="w-8 h-8 rounded-full object-cover shrink-0 border border-slate-100 shadow-sm cursor-zoom-in hover:scale-110 active:scale-95 transition-all duration-200" />
+                      } @else {
+                        <div class="w-8 h-8 bg-indigo-50 border border-indigo-100 rounded-full flex items-center justify-center shrink-0">
+                          <span class="text-[10px] font-bold text-indigo-700 uppercase">
+                            {{ m.estudianteNombre[0] }}{{ m.estudianteApellido[0] }}
+                          </span>
+                        </div>
+                      }
+                      <div>
+                        <p class="font-extrabold text-slate-800 text-sm leading-none">{{ m.estudianteNombre }} {{ m.estudianteApellido }}</p>
+                        <span class="inline-block mt-1 font-mono text-[9px] font-bold text-slate-400 bg-slate-50 border border-slate-100 rounded-lg px-1.5 py-0.5">
+                          {{ m.estudianteCodigo }}
+                        </span>
+                      </div>
+                    </div>
                   </td>
                   <td class="px-6 py-4">
                     <span class="inline-flex items-center px-3 py-1 bg-indigo-50/60 border border-indigo-100/50 text-indigo-700 text-xs font-extrabold rounded-2xl">
@@ -117,7 +130,18 @@ import { BuscadorComponent } from '../../../../shared/components/buscador/buscad
                 class="w-full flex items-center justify-between px-4 py-3 bg-slate-50 hover:bg-slate-100/50 border border-slate-200 rounded-2xl text-xs font-semibold text-slate-800 text-left focus:outline-none focus:border-indigo-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
                 <span>
                   @if (estudianteSeleccionado()) {
-                    {{ estudianteSeleccionado()?.nombre }} {{ estudianteSeleccionado()?.apellido }} ({{ estudianteSeleccionado()?.codigo }})
+                    <div class="flex items-center gap-2">
+                      @if (estudianteSeleccionado()?.fotoUrl) {
+                        <img [src]="estudianteSeleccionado()?.fotoUrl" alt="Avatar" class="w-5 h-5 rounded-full object-cover border border-slate-100 shadow-sm" />
+                      } @else {
+                        <div class="w-5 h-5 bg-indigo-50 border border-indigo-100 rounded-full flex items-center justify-center shrink-0">
+                          <span class="text-[8px] font-bold text-indigo-700 uppercase leading-none">
+                            {{ estudianteSeleccionado()?.nombre?.[0] }}{{ estudianteSeleccionado()?.apellido?.[0] }}
+                          </span>
+                        </div>
+                      }
+                      <span>{{ estudianteSeleccionado()?.nombre }} {{ estudianteSeleccionado()?.apellido }} ({{ estudianteSeleccionado()?.codigo }})</span>
+                    </div>
                   } @else {
                     Seleccionar estudiante...
                   }
@@ -145,7 +169,18 @@ import { BuscadorComponent } from '../../../../shared/components/buscador/buscad
                     @for (e of estudiantesFiltrados(); track e.id) {
                       <button type="button" (click)="seleccionarEstudiante(e)"
                         class="w-full text-left px-3 py-2 hover:bg-indigo-50/50 hover:text-indigo-700 rounded-xl text-xs font-semibold text-slate-700 transition duration-150 flex items-center justify-between">
-                        <span>{{ e.nombre }} {{ e.apellido }}</span>
+                        <div class="flex items-center gap-2">
+                          @if (e.fotoUrl) {
+                            <img [src]="e.fotoUrl" alt="Avatar" class="w-5 h-5 rounded-full object-cover border border-slate-100 shadow-sm" />
+                          } @else {
+                            <div class="w-5 h-5 bg-indigo-50 border border-indigo-100 rounded-full flex items-center justify-center shrink-0">
+                              <span class="text-[8px] font-bold text-indigo-700 uppercase leading-none">
+                                {{ e.nombre[0] }}{{ e.apellido[0] }}
+                              </span>
+                            </div>
+                          }
+                          <span>{{ e.nombre }} {{ e.apellido }}</span>
+                        </div>
                         <span class="font-mono text-[9px] text-slate-400 font-bold bg-slate-50 border border-slate-100 rounded-md px-1.5 py-0.5">{{ e.codigo }}</span>
                       </button>
                     } @empty {
@@ -189,6 +224,19 @@ import { BuscadorComponent } from '../../../../shared/components/buscador/buscad
         </form>
       </app-modal>
     }
+
+    @if (fotoAmpliada()) {
+      <div (click)="fotoAmpliada.set(null)" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 transition-all duration-300 animate-in fade-in">
+        <div class="relative max-w-md w-full flex flex-col items-center" (click)="$event.stopPropagation()">
+          <button (click)="fotoAmpliada.set(null)" class="absolute -top-12 right-0 p-2 text-white/80 hover:text-white bg-slate-900/40 hover:bg-slate-900/60 backdrop-blur-sm rounded-full transition duration-150 shadow-md">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+          <img [src]="fotoAmpliada()!" alt="Foto ampliada" class="max-w-full max-h-[75vh] rounded-3xl object-contain border-4 border-white shadow-2xl animate-in zoom-in-95 duration-200" />
+        </div>
+      </div>
+    }
   `,
 })
 export class MatriculasComponent implements OnInit {
@@ -209,6 +257,7 @@ export class MatriculasComponent implements OnInit {
   readonly editandoId = signal<string | null>(null);
   readonly pagina = signal(1);
   readonly filtro = signal<string>('');
+  readonly fotoAmpliada = signal<string | null>(null);
 
   readonly buscadorEstudiante = signal('');
   readonly estudianteDropdownAbierto = signal(false);

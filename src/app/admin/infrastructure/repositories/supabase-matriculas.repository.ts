@@ -4,7 +4,7 @@ import { Matricula, CrearMatriculaDto } from '../../core/domain/models/matricula
 import { RespuestaApi } from '../../../shared/domain/types/respuesta-api.type';
 import { obtenerClienteSupabase } from '../../../shared/infrastructure/supabase/supabase.client';
 
-const QUERY = `*, estudiantes(codigo, usuarios(nombre, apellido)), secciones(nombre, grados(nombre))`;
+const QUERY = `*, estudiantes(codigo, usuarios(nombre, apellido, foto_url)), secciones(nombre, grados(nombre))`;
 
 @Injectable({ providedIn: 'root' })
 export class SupabaseMatriculasRepository implements MatriculasRepository {
@@ -47,6 +47,7 @@ export class SupabaseMatriculasRepository implements MatriculasRepository {
       estudianteCodigo: r.estudiantes?.codigo ?? '',
       estudianteNombre: r.estudiantes?.usuarios?.nombre ?? '',
       estudianteApellido: r.estudiantes?.usuarios?.apellido ?? '',
+      estudianteFotoUrl: r.estudiantes?.usuarios?.foto_url || r.estudiantes?.usuarios?.fotoUrl || null,
       seccionNombre: r.secciones?.nombre ?? '',
       gradoNombre: r.secciones?.grados?.nombre ?? '',
       creadoEn: r.creado_en,

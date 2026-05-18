@@ -9,6 +9,7 @@ export interface Matricula {
   estudianteCodigo: string;
   estudianteNombre: string;
   estudianteApellido: string;
+  estudianteFotoUrl: string | null;
   seccionNombre: string;
   gradoNombre: string;
   creadoEn: string;
