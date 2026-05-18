@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal, computed } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AsistenciaRepository } from '../../../../admin/core/domain/ports/asistencia.repository';
+import { JustificacionesRepository } from '../../../../admin/core/domain/ports/justificaciones.repository';
 import { AuthState } from '../../../../auth/infrastructure/state/auth.state';
 import { HorarioHoy } from '../../../../admin/core/domain/models/asistencia.model';
 import { PaginadorComponent } from '../../../../shared/components/paginador/paginador.component';
@@ -26,7 +27,6 @@ import { PaginadorComponent } from '../../../../shared/components/paginador/pagi
       </header>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Bento Card 1: Agenda del Día (col-span-1) -->
         <section class="bg-white rounded-3xl p-6 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col justify-between hover:shadow-md hover:border-indigo-100 hover:-translate-y-0.5 transition-all duration-200">
           <div>
             <span class="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Tu Jornada</span>
@@ -58,7 +58,6 @@ import { PaginadorComponent } from '../../../../shared/components/paginador/pagi
           </div>
         </section>
 
-        <!-- Bento Card 2: Clases de Hoy (col-span-2) -->
         <section class="bg-white rounded-3xl p-6 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] md:col-span-2 flex flex-col justify-between hover:shadow-md hover:border-indigo-100 hover:-translate-y-0.5 transition-all duration-200">
           <div>
             <div class="flex justify-between items-center mb-4">
@@ -117,7 +116,6 @@ import { PaginadorComponent } from '../../../../shared/components/paginador/pagi
           </div>
         </section>
 
-        <!-- Bento Card 3: Herramientas Docentes (col-span-1) -->
         <section class="bg-white rounded-3xl p-6 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] hover:shadow-md hover:border-indigo-100 hover:-translate-y-0.5 transition-all duration-200">
           <span class="text-xs font-semibold text-indigo-600 uppercase tracking-wider">Herramientas</span>
           <h3 class="text-xl font-bold text-slate-800 mt-1 mb-4">Acceso Rápido</h3>
@@ -137,7 +135,6 @@ import { PaginadorComponent } from '../../../../shared/components/paginador/pagi
           </div>
         </section>
 
-        <!-- Bento Card 4: Recordatorios e Indicadores (col-span-2) -->
         <section class="bg-white rounded-3xl p-6 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] md:col-span-2 flex flex-col justify-between hover:shadow-md hover:border-indigo-100 hover:-translate-y-0.5 transition-all duration-200">
           <div>
             <span class="text-xs font-semibold text-amber-600 uppercase tracking-wider">Avisos Escolares</span>
@@ -148,7 +145,11 @@ import { PaginadorComponent } from '../../../../shared/components/paginador/pagi
           <div class="space-y-3">
             <div class="p-3 bg-slate-50/50 border border-slate-100 rounded-2xl flex items-start gap-3">
               <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">PENDIENTE</span>
-              <p class="text-xs text-slate-600 leading-relaxed">Tienes <strong>2 solicitudes de justificación</strong> por evaluar en la bandeja de entrada.</p>
+              @if (justificacionesPendientes() > 0) {
+                <p class="text-xs text-slate-600 leading-relaxed">Tienes <strong>{{ justificacionesPendientes() }} solicitudes de justificación</strong> por evaluar en la bandeja de entrada.</p>
+              } @else {
+                <p class="text-xs text-slate-600 leading-relaxed">No tienes solicitudes de justificación pendientes por evaluar. ¡Todo al día!</p>
+              }
             </div>
             <div class="p-3 bg-slate-50/50 border border-slate-100 rounded-2xl flex items-start gap-3">
               <span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">AVISO</span>
@@ -163,10 +164,12 @@ import { PaginadorComponent } from '../../../../shared/components/paginador/pagi
 export class DashboardDocenteComponent implements OnInit {
   readonly authState = inject(AuthState);
   private readonly repo = inject(AsistenciaRepository);
+  private readonly justificacionesRepo = inject(JustificacionesRepository);
 
   readonly cargando = signal(true);
   readonly clases = signal<HorarioHoy[]>([]);
   readonly fechaActual = signal<string>('');
+  readonly justificacionesPendientes = signal<number>(0);
 
   readonly porPagina = 3;
   readonly pagina = signal(1);
@@ -190,8 +193,18 @@ export class DashboardDocenteComponent implements OnInit {
     if (!docenteId) { this.cargando.set(false); return; }
 
     const fechaIso = hoy.toISOString().slice(0, 10);
-    const r = await this.repo.obtenerHorariosHoy(docenteId, fechaIso);
+    
+    const [horarioRes, justificacionesRes] = await Promise.all([
+      this.repo.obtenerHorariosHoy(docenteId, fechaIso),
+      this.justificacionesRepo.obtenerPorDocente(docenteId)
+    ]);
+
     this.cargando.set(false);
-    if (r.error === null) this.clases.set(r.datos);
+    if (horarioRes.error === null) this.clases.set(horarioRes.datos);
+
+    if (justificacionesRes.error === null) {
+      const count = justificacionesRes.datos.filter((j) => j.estado === 'pendiente').length;
+      this.justificacionesPendientes.set(count);
+    }
   }
 }
