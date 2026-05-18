@@ -159,7 +159,6 @@ const NAVEGACION: Record<Rol, ItemNavegacion[]> = {
           
           <div class="flex flex-col items-center justify-center text-center space-y-2">
             <div class="relative group">
-            <div class="relative group">
               @if (esFotoValida(fotoUrlTemp()) && fotoTempCargadaCorrectamente()) {
                 <img [src]="fotoUrlTemp()" (error)="fotoTempCargadaCorrectamente.set(false)" alt="Vista previa avatar" class="w-20 h-20 rounded-full object-cover border-2 border-indigo-600 shadow-md" />
               } @else {
