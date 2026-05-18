@@ -48,7 +48,7 @@ export class SupabaseAsistenciaRepository implements AsistenciaRepository {
     const { data: matriculas, error } = await this.supabase
       .from('matriculas')
       .select(`
-        id, estudiantes(codigo, usuarios(nombre, apellido)),
+        id, estudiantes(codigo, usuarios(nombre, apellido, foto_url)),
         asistencia(id, estado, observacion)
       `)
       .eq('estado', 'activo')
@@ -67,6 +67,7 @@ export class SupabaseAsistenciaRepository implements AsistenciaRepository {
         estado: asistenciaHoy?.estado ?? null,
         observacion: asistenciaHoy?.observacion ?? null,
         asistenciaId: asistenciaHoy?.id ?? null,
+        fotoUrl: m.estudiantes?.usuarios?.foto_url ?? null,
       };
     });
 

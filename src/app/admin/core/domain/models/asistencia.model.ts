@@ -30,6 +30,7 @@ export interface RegistroAsistencia {
   estado: EstadoAsistencia | null;
   observacion: string | null;
   asistenciaId: string | null;
+  fotoUrl?: string | null;
 }
 
 export interface RegistrarAsistenciaDto {

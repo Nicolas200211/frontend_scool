@@ -231,7 +231,7 @@ export class AsistenciaDocenteComponent implements OnInit {
         ...registro,
         estadoSeleccionado: registro.estado ?? 'presente',
         observacionTexto: registro.observacion ?? '',
-        fotoUrl: (registro as any).fotoUrl ?? null // map student photo URL
+        fotoUrl: registro.fotoUrl ?? null
       }))
     );
   }
