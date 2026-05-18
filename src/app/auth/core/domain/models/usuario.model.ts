@@ -7,6 +7,7 @@ export interface Usuario {
   nombre: string;
   apellido: string;
   activo: boolean;
+  fotoUrl?: string | null;
 }
 
 export interface CredencialesLogin {

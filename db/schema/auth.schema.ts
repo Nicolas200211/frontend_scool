@@ -10,6 +10,7 @@ export const usuarios = pgTable('usuarios', {
   nombre: text('nombre').notNull(),
   apellido: text('apellido').notNull(),
   activo: boolean('activo').default(true).notNull(),
+  fotoUrl: text('foto_url'),
   creadoEn: timestamp('creado_en', { withTimezone: true }).defaultNow().notNull(),
   actualizadoEn: timestamp('actualizado_en', { withTimezone: true }).defaultNow().notNull(),
 });

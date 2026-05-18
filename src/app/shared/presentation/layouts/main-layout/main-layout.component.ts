@@ -4,6 +4,10 @@ import { AuthState } from '../../../../auth/infrastructure/state/auth.state';
 import { LogoutUseCase } from '../../../../auth/core/application/logout.usecase';
 import { Router } from '@angular/router';
 import { Rol } from '../../../domain/types/rol.type';
+import { ModalComponent } from '../../../components/modal/modal.component';
+import { FormsModule } from '@angular/forms';
+import { obtenerClienteSupabase } from '../../../../shared/infrastructure/supabase/supabase.client';
+import { toast } from 'ngx-sonner';
 
 interface ItemNavegacion {
   etiqueta: string;
@@ -47,7 +51,7 @@ const NAVEGACION: Record<Rol, ItemNavegacion[]> = {
   selector: 'app-main-layout',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ModalComponent, FormsModule],
   template: `
     <div class="flex h-screen bg-slate-50 overflow-hidden">
 
@@ -92,17 +96,24 @@ const NAVEGACION: Record<Rol, ItemNavegacion[]> = {
 
         <!-- User profile container at the bottom -->
         <div class="px-4 py-5 border-t border-slate-50 shrink-0">
-          <div class="flex items-center gap-3 bg-slate-50/50 border border-slate-100/70 p-3 rounded-2xl mb-3 shadow-[0_8px_30px_rgb(0,0,0,0.01)]">
-            <div class="w-9 h-9 bg-indigo-50 border border-indigo-100 rounded-full flex items-center justify-center shrink-0">
-              <span class="text-xs font-bold text-indigo-700">{{ inicialesUsuario() }}</span>
-            </div>
+          <button (click)="abrirPerfilModal()"
+            class="w-full flex items-center gap-3 bg-slate-50/50 hover:bg-indigo-50/40 border border-slate-100/70 hover:border-indigo-100/50 p-3 rounded-2xl mb-3 shadow-[0_8px_30px_rgb(0,0,0,0.01)] text-left transition duration-150 group">
+            
+            @if (fotoUrlUsuario()) {
+              <img [src]="fotoUrlUsuario()" alt="Avatar" class="w-9 h-9 rounded-full object-cover shrink-0 border border-indigo-100 shadow-sm" />
+            } @else {
+              <div class="w-9 h-9 bg-indigo-50 border border-indigo-100 rounded-full flex items-center justify-center shrink-0">
+                <span class="text-xs font-bold text-indigo-700 group-hover:scale-105 transition">{{ inicialesUsuario() }}</span>
+              </div>
+            }
+
             <div class="flex-1 min-w-0">
-              <p class="text-xs font-bold text-slate-800 truncate leading-none">{{ nombreCompleto() }}</p>
+              <p class="text-xs font-bold text-slate-800 truncate leading-none group-hover:text-indigo-900 transition">{{ nombreCompleto() }}</p>
               <span class="inline-block bg-indigo-100/60 text-indigo-700 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider mt-1 font-mono">
                 {{ authState.rolUsuario() }}
               </span>
             </div>
-          </div>
+          </button>
           
           <button
             (click)="cerrarSesion()"
@@ -140,6 +151,95 @@ const NAVEGACION: Record<Rol, ItemNavegacion[]> = {
       </div>
 
     </div>
+
+    <!-- Configure Profile Modal -->
+    @if (modalPerfilAbierto()) {
+      <app-modal titulo="Configurar mi Perfil" (cerrar)="cerrarPerfilModal()">
+        <form (ngSubmit)="guardarPerfil()" class="space-y-5">
+          
+          <div class="flex flex-col items-center justify-center text-center space-y-2">
+            <div class="relative group">
+              @if (fotoUrlTemp()) {
+                <img [src]="fotoUrlTemp()" alt="Vista previa avatar" class="w-20 h-20 rounded-full object-cover border-2 border-indigo-600 shadow-md" />
+              } @else {
+                <div class="w-20 h-20 bg-indigo-50 border-2 border-indigo-100 rounded-full flex items-center justify-center shadow-inner">
+                  <span class="text-xl font-bold text-indigo-700">{{ inicialesUsuario() }}</span>
+                </div>
+              }
+              <div class="absolute inset-0 bg-black/40 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-200">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+            </div>
+            <p class="text-[10px] font-bold text-slate-400 font-mono uppercase tracking-wider">Vista previa de foto</p>
+          </div>
+
+          <div class="bg-slate-50 p-1 rounded-2xl flex border border-slate-100 gap-1">
+            <button type="button" (click)="opcionFoto.set('pc')"
+              class="flex-1 py-1.5 text-xs font-bold rounded-xl transition duration-150"
+              [class]="opcionFoto() === 'pc' ? 'bg-white text-indigo-700 shadow-sm border border-slate-100' : 'text-slate-500 hover:text-slate-800'">
+              Subir desde PC
+            </button>
+            <button type="button" (click)="opcionFoto.set('enlace')"
+              class="flex-1 py-1.5 text-xs font-bold rounded-xl transition duration-150"
+              [class]="opcionFoto() === 'enlace' ? 'bg-white text-indigo-700 shadow-sm border border-slate-100' : 'text-slate-500 hover:text-slate-800'">
+              Enlace de Internet
+            </button>
+          </div>
+
+          @if (opcionFoto() === 'pc') {
+            <div class="space-y-1.5">
+              <label class="block text-xs font-extrabold text-slate-500 uppercase tracking-wider font-mono">Seleccionar archivo</label>
+              <div class="relative flex items-center justify-center w-full h-24 border-2 border-dashed border-slate-200 hover:border-indigo-400 rounded-2xl bg-slate-50/50 hover:bg-slate-50 transition cursor-pointer">
+                <input type="file" accept="image/*" (change)="onArchivoSeleccionado($event)" 
+                  class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+                <div class="text-center space-y-1 pointer-events-none p-3">
+                  <svg class="w-6 h-6 mx-auto text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                  </svg>
+                  <p class="text-xs font-bold text-indigo-600">Haz clic para buscar imagen</p>
+                  <p class="text-[9px] text-slate-400 font-medium">Formatos soportados: JPG, PNG, WEBP (Max 2MB)</p>
+                </div>
+              </div>
+            </div>
+          } @else {
+            <div class="space-y-1.5">
+              <label class="block text-xs font-extrabold text-slate-500 uppercase tracking-wider font-mono">Dirección URL de la Imagen</label>
+              <input type="url" [(ngModel)]="enlaceFotoInput" name="enlaceFotoInput" (input)="onUrlCambia()"
+                placeholder="https://ejemplo.com/mi-foto.png"
+                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 hover:border-slate-200 focus:border-indigo-500 focus:bg-white rounded-2xl text-xs focus:outline-none transition-all" />
+            </div>
+          }
+
+          <div class="space-y-3 pt-2">
+            <div class="space-y-1.5">
+              <label class="block text-xs font-extrabold text-slate-500 uppercase tracking-wider font-mono">Nombre</label>
+              <input type="text" [(ngModel)]="nombreInput" name="nombreInput" required
+                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 hover:border-slate-200 focus:border-indigo-500 focus:bg-white rounded-2xl text-xs focus:outline-none transition-all" />
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="block text-xs font-extrabold text-slate-500 uppercase tracking-wider font-mono">Apellido</label>
+              <input type="text" [(ngModel)]="apellidoInput" name="apellidoInput" required
+                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-100 hover:border-slate-200 focus:border-indigo-500 focus:bg-white rounded-2xl text-xs focus:outline-none transition-all" />
+            </div>
+          </div>
+
+          <div class="flex gap-3 pt-3 border-t border-slate-50">
+            <button type="button" (click)="cerrarPerfilModal()"
+              class="flex-1 px-4 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-2xl transition shadow-sm text-center">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="guardandoPerfil()"
+              class="flex-1 px-4 py-2.5 text-xs font-black text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 rounded-2xl shadow-sm hover:shadow transition text-center">
+              {{ guardandoPerfil() ? 'Guardando...' : 'Guardar Cambios' }}
+            </button>
+          </div>
+        </form>
+      </app-modal>
+    }
   `,
 })
 export class MainLayoutComponent {
@@ -148,6 +248,15 @@ export class MainLayoutComponent {
   private readonly router = inject(Router);
 
   readonly sidebarAbierto = signal(true);
+
+  readonly modalPerfilAbierto = signal(false);
+  readonly guardandoPerfil = signal(false);
+  readonly opcionFoto = signal<'pc' | 'enlace'>('pc');
+
+  nombreInput = '';
+  apellidoInput = '';
+  enlaceFotoInput = '';
+  readonly fotoUrlTemp = signal<string | null>(null);
 
   readonly itemsNavegacion = computed(() => {
     const rol = this.authState.rolUsuario();
@@ -159,6 +268,10 @@ export class MainLayoutComponent {
     return usuario ? `${usuario.nombre} ${usuario.apellido}` : '';
   });
 
+  readonly fotoUrlUsuario = computed(() => {
+    return this.authState.usuarioActual()?.fotoUrl ?? null;
+  });
+
   readonly inicialesUsuario = computed(() => {
     const usuario = this.authState.usuarioActual();
     if (!usuario) return '';
@@ -167,6 +280,95 @@ export class MainLayoutComponent {
 
   toggleSidebar(): void {
     this.sidebarAbierto.update((abierto) => !abierto);
+  }
+
+  abrirPerfilModal(): void {
+    const usuario = this.authState.usuarioActual();
+    if (!usuario) return;
+
+    this.nombreInput = usuario.nombre;
+    this.apellidoInput = usuario.apellido;
+    this.fotoUrlTemp.set(usuario.fotoUrl ?? null);
+    
+    if (usuario.fotoUrl && usuario.fotoUrl.startsWith('http')) {
+      this.enlaceFotoInput = usuario.fotoUrl;
+      this.opcionFoto.set('enlace');
+    } else {
+      this.enlaceFotoInput = '';
+      this.opcionFoto.set('pc');
+    }
+
+    this.modalPerfilAbierto.set(true);
+  }
+
+  cerrarPerfilModal(): void {
+    this.modalPerfilAbierto.set(false);
+    this.fotoUrlTemp.set(null);
+  }
+
+  onArchivoSeleccionado(evento: Event): void {
+    const input = evento.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const archivo = input.files[0];
+      if (archivo.size > 2 * 1024 * 1024) {
+        toast.error('La imagen supera el límite de 2MB');
+        return;
+      }
+
+      const lector = new FileReader();
+      lector.onload = () => {
+        this.fotoUrlTemp.set(lector.result as string);
+      };
+      lector.readAsDataURL(archivo);
+    }
+  }
+
+  onUrlCambia(): void {
+    this.fotoUrlTemp.set(this.enlaceFotoInput.trim() || null);
+  }
+
+  async guardarPerfil(): Promise<void> {
+    const usuario = this.authState.usuarioActual();
+    if (!usuario) return;
+
+    if (!this.nombreInput.trim() || !this.apellidoInput.trim()) {
+      toast.error('Nombre y Apellido son obligatorios');
+      return;
+    }
+
+    this.guardandoPerfil.set(true);
+
+    try {
+      const supabase = obtenerClienteSupabase();
+      const { error } = await supabase
+        .from('usuarios')
+        .update({
+          nombre: this.nombreInput.trim(),
+          apellido: this.apellidoInput.trim(),
+          foto_url: this.fotoUrlTemp() || null,
+        })
+        .eq('id', usuario.id);
+
+      if (error) {
+        toast.error('Error al actualizar el perfil');
+        console.error(error);
+        return;
+      }
+
+      this.authState.actualizarUsuario({
+        nombre: this.nombreInput.trim(),
+        apellido: this.apellidoInput.trim(),
+        fotoUrl: this.fotoUrlTemp() || null,
+      });
+
+      toast.success('¡Perfil actualizado correctamente!');
+      this.cerrarPerfilModal();
+    } catch (e) {
+      toast.error('Ocurrió un error inesperado');
+      console.error(e);
+    } finally {
+      this.guardandoPerfil.set(false);
+    }
   }
 
   async cerrarSesion(): Promise<void> {

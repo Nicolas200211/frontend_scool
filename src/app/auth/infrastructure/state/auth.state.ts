@@ -23,6 +23,21 @@ export class AuthState {
     localStorage.removeItem(CLAVE_SESION);
   }
 
+  actualizarUsuario(usuarioActualizado: Partial<Usuario>): void {
+    const sesionActual = this.sesion();
+    if (!sesionActual) return;
+
+    const nuevaSesion: SesionActiva = {
+      ...sesionActual,
+      usuario: {
+        ...sesionActual.usuario,
+        ...usuarioActualizado,
+      },
+    };
+    this.sesion.set(nuevaSesion);
+    localStorage.setItem(CLAVE_SESION, JSON.stringify(nuevaSesion));
+  }
+
   private cargarSesionGuardada(): SesionActiva | null {
     const sesionGuardada = localStorage.getItem(CLAVE_SESION);
     if (!sesionGuardada) return null;

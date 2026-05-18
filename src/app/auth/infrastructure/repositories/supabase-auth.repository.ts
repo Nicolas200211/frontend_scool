@@ -33,7 +33,10 @@ export class SupabaseAuthRepository implements AuthRepository {
 
     return {
       datos: {
-        usuario: respuesta.usuario!,
+        usuario: {
+          ...respuesta.usuario!,
+          fotoUrl: (respuesta.usuario as any).foto_url || (respuesta.usuario as any).fotoUrl || null,
+        },
         token: respuesta.token!,
         expiresAt: respuesta.expiresAt!,
       },
