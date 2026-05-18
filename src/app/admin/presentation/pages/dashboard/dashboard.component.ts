@@ -116,19 +116,36 @@ import { AsistenciaRepository } from '../../../core/domain/ports/asistencia.repo
           </div>
 
           <div class="space-y-2">
+            @if (ausentesHoy() !== '...' && ausentesHoy() !== '0' && ausentesHoy() !== '—') {
+              <div class="flex items-center justify-between p-3 bg-slate-50/50 border border-slate-100 rounded-2xl">
+                <div class="flex items-center gap-3">
+                  <span class="bg-rose-50 text-rose-700 text-xs font-bold px-2 py-0.5 rounded-full font-mono">ALERTA</span>
+                  <span class="text-sm font-medium text-slate-700">Se han reportado {{ ausentesHoy() }} inasistencias el día de hoy</span>
+                </div>
+                <span class="text-xs text-slate-400 font-mono">Hoy</span>
+              </div>
+            } @else {
+              <div class="flex items-center justify-between p-3 bg-slate-50/50 border border-slate-100 rounded-2xl">
+                <div class="flex items-center gap-3">
+                  <span class="bg-emerald-50 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-full font-mono">SISTEMA</span>
+                  <span class="text-sm font-medium text-slate-700">Control de asistencia diario al día sin ausencias pendientes</span>
+                </div>
+                <span class="text-xs text-slate-400 font-mono">Hoy</span>
+              </div>
+            }
+
             <div class="flex items-center justify-between p-3 bg-slate-50/50 border border-slate-100 rounded-2xl">
               <div class="flex items-center gap-3">
-                <span class="bg-rose-50 text-rose-700 text-xs font-bold px-2 py-0.5 rounded-full font-mono">ALERTA</span>
-                <span class="text-sm font-medium text-slate-700">Se han reportado inasistencias sin justificar en 5to Año</span>
+                <span class="bg-indigo-50 text-indigo-700 text-xs font-bold px-2 py-0.5 rounded-full font-mono">SISTEMA</span>
+                <span class="text-sm font-medium text-slate-700">
+                  @if (totalEstudiantes() !== '...') {
+                    La base de datos registra {{ totalEstudiantes() }} estudiantes matriculados activos
+                  } @else {
+                    Cargando matrícula del periodo académico actual...
+                  }
+                </span>
               </div>
-              <span class="text-xs text-slate-400 font-mono">Hoy</span>
-            </div>
-            <div class="flex items-center justify-between p-3 bg-slate-50/50 border border-slate-100 rounded-2xl">
-              <div class="flex items-center gap-3">
-                <span class="bg-emerald-50 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-full font-mono">SISTEMA</span>
-                <span class="text-sm font-medium text-slate-700">La carga de matrículas para el periodo 2024 finalizó correctamente</span>
-              </div>
-              <span class="text-xs text-slate-400 font-mono">Ayer</span>
+              <span class="text-xs text-slate-400 font-mono">Reciente</span>
             </div>
           </div>
         </section>
