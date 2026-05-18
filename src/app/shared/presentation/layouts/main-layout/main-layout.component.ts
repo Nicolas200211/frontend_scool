@@ -70,7 +70,7 @@ const NAVEGACION: Record<Rol, ItemNavegacion[]> = {
             </svg>
           </div>
           <div class="flex flex-col">
-            <span class="text-sm font-black text-slate-800 leading-none">Bento School</span>
+            <span class="text-sm font-black text-slate-800 leading-none">IEP Republica Bolivariana de Venezuela</span>
             <span class="text-[10px] font-semibold text-slate-400 mt-0.5">Control de Asistencia</span>
           </div>
         </div>
@@ -142,7 +142,7 @@ const NAVEGACION: Record<Rol, ItemNavegacion[]> = {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
             </svg>
           </button>
-          <span class="text-sm font-bold text-slate-800">Bento School</span>
+          <span class="text-sm font-bold text-slate-800">IEP Republica Bolivariana de Venezuela</span>
         </header>
 
         <main class="flex-1 overflow-y-auto p-6 md:p-8">
@@ -300,7 +300,7 @@ export class MainLayoutComponent {
     this.fotoUrlTemp.set(usuario.fotoUrl ?? null);
     this.fotoUsuarioCargadaCorrectamente.set(true);
     this.fotoTempCargadaCorrectamente.set(true);
-    
+
     if (usuario.fotoUrl && usuario.fotoUrl.startsWith('http')) {
       this.enlaceFotoInput = usuario.fotoUrl;
       this.opcionFoto.set('enlace');
