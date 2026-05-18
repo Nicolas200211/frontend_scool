@@ -1,17 +1,19 @@
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { toast } from 'ngx-sonner';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
 import { LoadingSpinnerComponent } from '../../../../shared/components/loading-spinner/loading-spinner.component';
 import { EmptyStateComponent } from '../../../../shared/components/empty-state/empty-state.component';
 import { AsistenciaRepository } from '../../../../admin/core/domain/ports/asistencia.repository';
 import { AuthState } from '../../../../auth/infrastructure/state/auth.state';
 import { HorarioHoy, RegistroAsistencia, EstadoAsistencia } from '../../../../admin/core/domain/models/asistencia.model';
+import { PaginadorComponent } from '../../../../shared/components/paginador/paginador.component';
 
-const ESTADOS: { valor: EstadoAsistencia; etiqueta: string; clase: string }[] = [
-  { valor: 'presente', etiqueta: 'Presente', clase: 'bg-green-100 text-green-700 ring-green-400' },
-  { valor: 'ausente', etiqueta: 'Ausente', clase: 'bg-red-100 text-red-600 ring-red-400' },
-  { valor: 'tardanza', etiqueta: 'Tardanza', clase: 'bg-yellow-100 text-yellow-700 ring-yellow-400' },
-  { valor: 'justificado', etiqueta: 'Justificado', clase: 'bg-blue-100 text-blue-700 ring-blue-400' },
+const ESTADOS: { valor: EstadoAsistencia; etiqueta: string; claseActiva: string }[] = [
+  { valor: 'presente', etiqueta: 'Presente', claseActiva: 'bg-emerald-50 border-emerald-200 text-emerald-800 font-bold' },
+  { valor: 'ausente', etiqueta: 'Ausente', claseActiva: 'bg-rose-50 border-rose-200 text-rose-800 font-bold' },
+  { valor: 'tardanza', etiqueta: 'Tardanza', claseActiva: 'bg-amber-50 border-amber-200 text-amber-800 font-bold' },
+  { valor: 'justificado', etiqueta: 'Justificado', claseActiva: 'bg-indigo-50 border-indigo-200 text-indigo-800 font-bold' },
 ];
 
 interface FilaAsistencia extends RegistroAsistencia {
@@ -23,43 +25,70 @@ interface FilaAsistencia extends RegistroAsistencia {
   selector: 'app-asistencia-docente',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PageHeaderComponent, LoadingSpinnerComponent, EmptyStateComponent],
+  imports: [FormsModule, PageHeaderComponent, LoadingSpinnerComponent, EmptyStateComponent, PaginadorComponent],
   template: `
-    <app-page-header titulo="Tomar Asistencia" [subtitulo]="'Fecha: ' + fecha" />
+    <app-page-header titulo="Tomar Asistencia" [subtitulo]="'Control diario de clases • ' + fechaFormateada()" />
 
     @if (cargandoClases()) { <app-loading-spinner /> }
     @else if (!claseSeleccionada()) {
       @if (clasesHoy().length === 0) {
         <app-empty-state titulo="Sin clases hoy" descripcion="No tienes clases programadas para hoy" />
       } @else {
-        <p class="text-sm text-gray-500 mb-4">Selecciona la clase para tomar asistencia:</p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          @for (c of clasesHoy(); track c.id) {
+        <p class="text-sm text-slate-500 mb-6">Selecciona una asignatura de tu agenda diaria para iniciar la toma de asistencia:</p>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-6">
+          @for (c of clasesHoyPagina(); track c.id) {
             <button (click)="seleccionarClase(c)"
-              class="bg-white rounded-xl p-4 border shadow-sm text-left hover:shadow-md hover:border-indigo-300 transition"
-              [class.border-indigo-300]="c.asistenciaTomada"
-              [class.opacity-75]="c.asistenciaTomada">
-              <div class="flex items-start justify-between mb-2">
-                <p class="font-semibold text-gray-900">{{ c.asignaturaNombre }}</p>
-                @if (c.asistenciaTomada) {
-                  <span class="text-xs font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full">Tomada</span>
-                }
+              class="bg-white rounded-3xl p-6 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] text-left flex flex-col justify-between hover:shadow-md hover:border-indigo-150 hover:-translate-y-0.5 transition-all duration-200"
+              [class.opacity-90]="c.asistenciaTomada">
+              
+              <div class="w-full">
+                <div class="flex items-start justify-between gap-3 mb-4">
+                  <h4 class="font-extrabold text-slate-800 text-base leading-tight">{{ c.asignaturaNombre }}</h4>
+                  @if (c.asistenciaTomada) {
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-emerald-50 border border-emerald-100 text-emerald-700 text-[10px] font-extrabold rounded-full shrink-0">
+                      Completo
+                    </span>
+                  } @else {
+                    <span class="inline-flex items-center gap-1 px-2.5 py-0.5 bg-amber-50 border border-amber-100 text-amber-700 text-[10px] font-extrabold rounded-full shrink-0 animate-pulse">
+                      Pendiente
+                    </span>
+                  }
+                </div>
+                
+                <div class="space-y-1 text-xs mb-6">
+                  <p class="text-slate-500 font-semibold">{{ c.gradoNombre }} — {{ c.seccionNombre }}</p>
+                  <p class="text-indigo-900 bg-indigo-50/50 border border-indigo-100/50 px-2 py-0.5 rounded-md font-mono text-[10px] inline-block mt-1">{{ c.horaInicio }} – {{ c.horaFin }}</p>
+                </div>
               </div>
-              <p class="text-sm text-gray-500">{{ c.gradoNombre }} — {{ c.seccionNombre }}</p>
-              <p class="text-xs text-gray-400 mt-1 tabular-nums">{{ c.horaInicio }} – {{ c.horaFin }}</p>
+
+              <div class="w-full pt-4 border-t border-slate-50 flex items-center justify-between text-xs text-indigo-600 font-bold group">
+                <span>{{ c.asistenciaTomada ? 'Revisar registro' : 'Iniciar registro' }}</span>
+                <span class="group-hover:translate-x-1 transition-transform">→</span>
+              </div>
             </button>
           }
         </div>
+
+        <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
+          <app-paginador [paginaActual]="pagina()" [total]="clasesHoy().length" [porPagina]="porPagina" (paginaCambia)="pagina.set($event)" />
+        </div>
       }
     } @else {
-      <div class="flex items-center gap-3 mb-5">
-        <button (click)="volverAClases()" class="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
-          Volver
-        </button>
-        <div>
-          <p class="font-semibold text-gray-900">{{ claseSeleccionada()!.asignaturaNombre }}</p>
-          <p class="text-sm text-gray-500">{{ claseSeleccionada()!.gradoNombre }} — {{ claseSeleccionada()!.seccionNombre }}</p>
+      <!-- Taking Attendance Mode -->
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <div class="flex items-center gap-3">
+          <button (click)="volverAClases()" class="flex items-center justify-center w-9 h-9 bg-white border border-slate-200 hover:bg-slate-50 text-slate-500 rounded-xl transition shadow-sm shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          <div>
+            <h3 class="font-extrabold text-slate-800 text-lg leading-tight">{{ claseSeleccionada()!.asignaturaNombre }}</h3>
+            <p class="text-xs text-slate-400 font-semibold">{{ claseSeleccionada()!.gradoNombre }} • {{ claseSeleccionada()!.seccionNombre }}</p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-2 bg-indigo-50/50 border border-indigo-100/50 px-4 py-2 rounded-2xl shrink-0">
+          <span class="text-xs text-indigo-900 font-mono font-bold">{{ claseSeleccionada()!.horaInicio }} – {{ claseSeleccionada()!.horaFin }}</span>
         </div>
       </div>
 
@@ -67,62 +96,65 @@ interface FilaAsistencia extends RegistroAsistencia {
       @else if (filas().length === 0) {
         <app-empty-state titulo="Sin estudiantes" descripcion="No hay estudiantes matriculados en esta sección" />
       } @else {
-        <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-4">
-          <table class="w-full text-sm">
-            <thead class="bg-gray-50 border-b border-gray-100">
-              <tr>
-                <th class="px-4 py-3 text-left font-semibold text-gray-600">Estudiante</th>
-                <th class="px-4 py-3 text-left font-semibold text-gray-600">Estado</th>
-                <th class="px-4 py-3 text-left font-semibold text-gray-600">Observación</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-50">
-              @for (fila of filas(); track fila.matriculaId) {
-                <tr class="hover:bg-gray-50 transition">
-                  <td class="px-4 py-3">
-                    <p class="font-medium text-gray-900">{{ fila.estudianteApellido }}, {{ fila.estudianteNombre }}</p>
-                    <p class="text-xs text-gray-400 font-mono">{{ fila.estudianteCodigo }}</p>
-                  </td>
-                  <td class="px-4 py-3">
-                    <div class="flex gap-1 flex-wrap">
-                      @for (estado of estadosAsistencia; track estado.valor) {
-                        <button type="button" (click)="cambiarEstado(fila, estado.valor)"
-                          class="px-2.5 py-1 rounded-lg text-xs font-medium border transition"
-                          [class]="fila.estadoSeleccionado === estado.valor ? estado.clase + ' ring-1' : 'bg-gray-50 text-gray-500 border-gray-200 hover:bg-gray-100'">
-                          {{ estado.etiqueta }}
-                        </button>
-                      }
-                    </div>
-                  </td>
-                  <td class="px-4 py-3">
-                    <input type="text" [(ngModel)]="fila.observacionTexto" placeholder="Opcional"
-                      class="w-full px-3 py-1.5 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-400"/>
-                  </td>
+        <!-- Students list table card -->
+        <div class="bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden mb-6">
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                  <th class="px-6 py-4 text-left">Estudiante</th>
+                  <th class="px-6 py-4 text-left">Estado de Asistencia</th>
+                  <th class="px-6 py-4 text-left">Observación</th>
                 </tr>
-              }
-            </tbody>
-          </table>
+              </thead>
+              <tbody class="divide-y divide-slate-50">
+                @for (fila of filas(); track fila.matriculaId) {
+                  <tr class="hover:bg-slate-50/30 transition duration-150">
+                    <td class="px-6 py-4 shrink-0">
+                      <p class="font-extrabold text-slate-800">{{ fila.estudianteApellido }}, {{ fila.estudianteNombre }}</p>
+                      <p class="text-[10px] text-slate-400 font-mono font-bold">{{ fila.estudianteCodigo }}</p>
+                    </td>
+                    <td class="px-6 py-4">
+                      <div class="flex gap-1.5 flex-wrap">
+                        @for (estado of estadosAsistencia; track estado.valor) {
+                          <button type="button" (click)="cambiarEstado(fila, estado.valor)"
+                            class="px-3 py-1.5 rounded-2xl text-xs font-extrabold border transition-all duration-150"
+                            [class]="fila.estadoSeleccionado === estado.valor 
+                              ? estado.claseActiva + ' border-transparent shadow-sm' 
+                              : 'bg-slate-50/80 text-slate-500 border-slate-200/60 hover:bg-slate-100 hover:text-slate-800'">
+                            {{ estado.etiqueta }}
+                          </button>
+                        }
+                      </div>
+                    </td>
+                    <td class="px-6 py-4">
+                      <input type="text" [(ngModel)]="fila.observacionTexto" placeholder="Añadir comentario..."
+                        class="w-full px-4 py-2 bg-slate-50 border border-slate-100 hover:border-slate-200 focus:border-indigo-500 focus:bg-white rounded-2xl text-xs focus:outline-none transition-all"/>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div class="flex justify-end gap-3">
-          <button (click)="marcarTodos('presente')" class="px-3 py-2 text-xs font-medium text-green-700 bg-green-50 rounded-lg hover:bg-green-100 transition">Todos presentes</button>
-          <button (click)="guardar()" [disabled]="guardando()"
-            class="px-5 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-60 transition">
-            {{ guardando() ? 'Guardando...' : 'Guardar asistencia' }}
+        
+        <!-- Action buttons footer -->
+        <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-slate-50 border border-slate-100 p-4 rounded-3xl">
+          <button (click)="marcarTodos('presente')" class="px-4 py-2 text-xs font-bold text-emerald-800 hover:text-emerald-950 bg-emerald-100/50 hover:bg-emerald-100 border border-emerald-200/50 rounded-2xl transition">
+            Marcar todos como Presentes
           </button>
+          
+          <div class="flex items-center gap-3 w-full sm:w-auto">
+            <button (click)="volverAClases()" class="flex-1 sm:flex-none px-5 py-2.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 rounded-2xl transition shadow-sm">
+              Cancelar
+            </button>
+            <button (click)="guardar()" [disabled]="guardando()"
+              class="flex-1 sm:flex-none px-6 py-2.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 rounded-2xl shadow-sm hover:shadow transition">
+              {{ guardando() ? 'Guardando...' : 'Guardar asistencia' }}
+            </button>
+          </div>
         </div>
       }
-    }
-
-    @if (exito()) {
-      <div class="fixed bottom-4 right-4 bg-green-50 border border-green-200 rounded-lg p-3 shadow z-50" role="alert">
-        <p class="text-sm text-green-700">Asistencia guardada correctamente</p>
-      </div>
-    }
-
-    @if (error()) {
-      <div class="fixed bottom-4 right-4 bg-red-50 border border-red-200 rounded-lg p-3 shadow z-50" role="alert">
-        <p class="text-sm text-red-600">{{ error() }}</p>
-      </div>
     }
   `,
 })
@@ -134,16 +166,25 @@ export class AsistenciaDocenteComponent implements OnInit {
   readonly cargandoClases = signal(true);
   readonly cargandoLista = signal(false);
   readonly guardando = signal(false);
-  readonly error = signal<string | null>(null);
-  readonly exito = signal(false);
+  readonly porPagina = 8;
+  readonly pagina = signal(1);
+  readonly clasesHoyPagina = computed(() => {
+    const start = (this.pagina() - 1) * this.porPagina;
+    return this.clasesHoy().slice(start, start + this.porPagina);
+  });
+
   readonly clasesHoy = signal<HorarioHoy[]>([]);
   readonly claseSeleccionada = signal<HorarioHoy | null>(null);
   readonly filas = signal<FilaAsistencia[]>([]);
 
   readonly fecha = new Date().toISOString().slice(0, 10);
+  readonly fechaFormateada = signal<string>('');
   private docenteId: string | null = null;
 
   async ngOnInit(): Promise<void> {
+    const hoy = new Date();
+    this.fechaFormateada.set(hoy.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }));
+
     const usuarioId = this.authState.usuarioActual()?.id;
     if (!usuarioId) { this.cargandoClases.set(false); return; }
 
@@ -152,7 +193,7 @@ export class AsistenciaDocenteComponent implements OnInit {
 
     const r = await this.repo.obtenerHorariosHoy(this.docenteId, this.fecha);
     this.cargandoClases.set(false);
-    if (r.error !== null) { this.mostrarError(r.error); return; }
+    if (r.error !== null) { toast.error(r.error); return; }
     this.clasesHoy.set(r.datos);
   }
 
@@ -161,7 +202,7 @@ export class AsistenciaDocenteComponent implements OnInit {
     this.cargandoLista.set(true);
     const r = await this.repo.obtenerListaAsistencia(clase.id, this.fecha);
     this.cargandoLista.set(false);
-    if (r.error !== null) { this.mostrarError(r.error); return; }
+    if (r.error !== null) { toast.error(r.error); return; }
     this.filas.set(r.datos.map((registro) => ({
       ...registro,
       estadoSeleccionado: registro.estado ?? 'presente',
@@ -192,12 +233,9 @@ export class AsistenciaDocenteComponent implements OnInit {
     }));
     const r = await this.repo.guardarAsistencia(dtos);
     this.guardando.set(false);
-    if (r.error !== null) { this.mostrarError(r.error); return; }
-    this.exito.set(true);
-    setTimeout(() => this.exito.set(false), 3000);
+    if (r.error !== null) { toast.error(r.error); return; }
+    toast.success('¡Asistencia guardada correctamente!');
     this.clasesHoy.update((lista) => lista.map((c) => c.id === clase.id ? { ...c, asistenciaTomada: true } : c));
     this.volverAClases();
   }
-
-  private mostrarError(m: string): void { this.error.set(m); setTimeout(() => this.error.set(null), 4000); }
 }
