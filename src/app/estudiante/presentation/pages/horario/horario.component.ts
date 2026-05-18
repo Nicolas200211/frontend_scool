@@ -27,37 +27,45 @@ const ETIQUETAS: Record<DiaSemana, string> = {
     } @else {
       <div class="space-y-8">
         @for (dia of diasConClases(); track dia) {
-          <section class="space-y-3">
+          <section class="space-y-4">
             <div class="flex items-center gap-2 px-1">
               <span class="w-1.5 h-6 bg-indigo-600 rounded-full"></span>
               <h2 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider">{{ etiquetaDia(dia) }}</h2>
             </div>
             
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden">
-              <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                  <tbody class="divide-y divide-slate-50">
-                    @for (h of clasesPorDia(dia); track h.id) {
-                      <tr class="hover:bg-slate-50/30 transition duration-150">
-                        <td class="px-6 py-4 w-36 shrink-0">
-                          <span class="inline-block text-center font-mono font-bold text-[10px] text-indigo-900 bg-indigo-50/60 border border-indigo-100/50 px-3 py-1 rounded-2xl">
-                            {{ h.horaInicio }} – {{ h.horaFin }}
-                          </span>
-                        </td>
-                        <td class="px-6 py-4">
-                          <p class="font-extrabold text-slate-800 text-sm">{{ h.asignaturaNombre }}</p>
-                          <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Asignatura</p>
-                        </td>
-                        <td class="px-6 py-4 text-slate-500 font-semibold text-xs text-right">
-                          <span class="inline-block bg-slate-50 px-3 py-1.5 rounded-2xl border border-slate-100 text-slate-600">
-                            {{ h.docenteNombre }} {{ h.docenteApellido }}
-                          </span>
-                        </td>
-                      </tr>
-                    }
-                  </tbody>
-                </table>
-              </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              @for (h of clasesPorDia(dia); track h.id) {
+                <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col justify-between hover:shadow-md hover:border-indigo-100 hover:-translate-y-0.5 transition-all duration-200 group relative overflow-hidden">
+                  <div class="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-indigo-500 to-indigo-600"></div>
+
+                  <div class="space-y-4">
+                    <div class="flex items-center gap-2">
+                      <div class="px-3 py-1 bg-indigo-50/60 border border-indigo-100/50 text-indigo-700 text-[10px] font-black font-mono rounded-xl shrink-0 leading-none">
+                        {{ h.horaInicio }} – {{ h.horaFin }}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 class="font-black text-slate-800 text-base leading-tight group-hover:text-indigo-600 transition duration-150">{{ h.asignaturaNombre }}</h4>
+                      <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1">Asignatura</p>
+                    </div>
+                  </div>
+
+                  <div class="h-px bg-slate-50 my-4"></div>
+
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 bg-indigo-50 border border-indigo-100 rounded-full flex items-center justify-center shrink-0">
+                      <span class="text-[9px] font-black text-indigo-700 uppercase leading-none">
+                        {{ h.docenteNombre[0] }}{{ h.docenteApellido[0] }}
+                      </span>
+                    </div>
+                    <div>
+                      <p class="text-xs font-extrabold text-slate-700 leading-none">{{ h.docenteNombre }} {{ h.docenteApellido }}</p>
+                      <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1">Docente</p>
+                    </div>
+                  </div>
+                </div>
+              }
             </div>
           </section>
         }
