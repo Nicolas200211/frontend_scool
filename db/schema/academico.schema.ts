@@ -53,3 +53,17 @@ export const horarios = pgTable('horarios', {
   horaFin: time('hora_fin').notNull(),
   creadoEn: timestamp('creado_en', { withTimezone: true }).defaultNow().notNull(),
 });
+
+export const anuncios = pgTable('anuncios', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  docenteId: uuid('docente_id')
+    .notNull()
+    .references(() => docentes.id, { onDelete: 'cascade' }),
+  seccionId: uuid('seccion_id')
+    .notNull()
+    .references(() => secciones.id, { onDelete: 'cascade' }),
+  tipo: text('tipo').notNull(),
+  titulo: text('titulo').notNull(),
+  mensaje: text('mensaje').notNull(),
+  creadoEn: timestamp('creado_en', { withTimezone: true }).defaultNow().notNull(),
+});

@@ -10,6 +10,7 @@ import {
   secciones,
   asignaturas,
   horarios,
+  anuncios,
 } from './schema/academico.schema';
 import {
   matriculas,
@@ -35,6 +36,7 @@ const runSeed = async () => {
     await db.delete(asistencia);
     await db.delete(matriculas);
     await db.delete(horarios);
+    await db.delete(anuncios);
     await db.delete(secciones);
     await db.delete(asignaturas);
     await db.delete(grados);
@@ -206,6 +208,28 @@ const runSeed = async () => {
       { asistenciaId: createdAsistencias[3].id, apoderadoId: createdApoderados[5].id, motivo: 'Viaje de emergencia', estado: 'pendiente' as const },
     ];
     await db.insert(justificaciones).values(justificacionesData);
+
+    console.log('📝 Insertando Anuncios iniciales de prueba...');
+    const anunciosSeedData = [];
+    for (let i = 0; i < createdSecciones.length; i++) {
+      // Examen para cada sección
+      anunciosSeedData.push({
+        docenteId: createdDocentes[0].id,
+        seccionId: createdSecciones[i].id,
+        tipo: 'examen',
+        titulo: 'EXAMEN',
+        mensaje: 'Examen parcial de Matemáticas / Álgebra programado para este Lunes a las 08:00.',
+      });
+      // Calificación/Entregado para cada sección
+      anunciosSeedData.push({
+        docenteId: createdDocentes[2].id,
+        seccionId: createdSecciones[i].id,
+        tipo: 'entregado',
+        titulo: 'ENTREGADO',
+        mensaje: 'Tu proyecto final de Ciencias y Tecnología ha sido calificado con un récord sobresaliente.',
+      });
+    }
+    await db.insert(anuncios).values(anunciosSeedData);
 
     console.log('🎉 ¡Seed ejecutado correctamente! Entorno escolar completo generado.');
   } catch (error) {

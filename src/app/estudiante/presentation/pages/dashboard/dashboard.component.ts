@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@ang
 import { RouterLink } from '@angular/router';
 import { EstudianteRepository } from '../../../core/domain/ports/estudiante.repository';
 import { AuthState } from '../../../../auth/infrastructure/state/auth.state';
+import { Anuncio } from '../../../core/domain/models/anuncio.model';
 
 @Component({
   selector: 'app-dashboard-estudiante',
@@ -113,14 +114,35 @@ import { AuthState } from '../../../../auth/infrastructure/state/auth.state';
           </div>
 
           <div class="space-y-3">
-            <div class="p-3 bg-slate-50/50 border border-slate-100 rounded-2xl flex items-start gap-3">
-              <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">EXAMEN</span>
-              <p class="text-xs text-slate-600 leading-relaxed">Examen parcial de <strong>Matemáticas / Álgebra</strong> programado para este Lunes a las <span class="font-mono">08:00</span>.</p>
-            </div>
-            <div class="p-3 bg-slate-50/50 border border-slate-100 rounded-2xl flex items-start gap-3">
-              <span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">ENTREGADO</span>
-              <p class="text-xs text-slate-600 leading-relaxed">Tu proyecto final de <strong>Ciencias y Tecnología</strong> ha sido calificado con un récord sobresaliente.</p>
-            </div>
+            @for (anuncio of anuncios(); track anuncio.id) {
+              <div class="p-3 bg-slate-50/50 border border-slate-100 rounded-2xl flex items-start justify-between gap-3 group/item">
+                <div class="flex items-start gap-3">
+                  @if (anuncio.tipo.toLowerCase() === 'examen') {
+                    <span class="bg-rose-50 border border-rose-100 text-rose-700 text-[9px] font-black px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">
+                      {{ anuncio.titulo.toUpperCase() }}
+                    </span>
+                  } @else if (anuncio.tipo.toLowerCase() === 'entregado' || anuncio.tipo.toLowerCase() === 'calificacion') {
+                    <span class="bg-emerald-50 border border-emerald-100 text-emerald-700 text-[9px] font-black px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">
+                      {{ anuncio.titulo.toUpperCase() }}
+                    </span>
+                  } @else {
+                    <span class="bg-indigo-50 border border-indigo-100 text-indigo-700 text-[9px] font-black px-2 py-0.5 rounded-full font-mono shrink-0 mt-0.5">
+                      {{ anuncio.titulo.toUpperCase() }}
+                    </span>
+                  }
+                  <div>
+                    <p class="text-xs text-slate-600 leading-relaxed font-medium" [innerHTML]="anuncio.mensaje"></p>
+                    <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-1.5">
+                      Docente: {{ anuncio.docenteNombre }} {{ anuncio.docenteApellido }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            } @empty {
+              <div class="p-8 text-center bg-slate-50/30 rounded-2xl border border-dashed border-slate-100">
+                <p class="text-xs text-slate-400 font-medium">No hay anuncios ni novedades publicadas en tu sección.</p>
+              </div>
+            }
           </div>
         </section>
       </div>
@@ -133,6 +155,7 @@ export class DashboardEstudianteComponent implements OnInit {
 
   readonly stats = signal({ porcentaje: 0, ausentes: 0, tardanzas: 0 });
   readonly fechaActual = signal<string>('');
+  readonly anuncios = signal<Anuncio[]>([]);
 
   async ngOnInit(): Promise<void> {
     const hoy = new Date();
@@ -149,13 +172,24 @@ export class DashboardEstudianteComponent implements OnInit {
     inicio.setDate(1);
     const inicioMes = inicio.toISOString().slice(0, 10);
 
-    const r = await this.repo.obtenerMiAsistencia(estudianteId, inicioMes, fechaIso);
-    if (r.error === null) {
-      const total = r.datos.length;
-      const presentes = r.datos.filter((a) => a.estado === 'presente' || a.estado === 'justificado').length;
-      const ausentes = r.datos.filter((a) => a.estado === 'ausente').length;
-      const tardanzas = r.datos.filter((a) => a.estado === 'tardanza').length;
+    const [asistenciaRes, seccionId] = await Promise.all([
+      this.repo.obtenerMiAsistencia(estudianteId, inicioMes, fechaIso),
+      this.repo.obtenerMatriculaActiva(estudianteId)
+    ]);
+
+    if (asistenciaRes.error === null) {
+      const total = asistenciaRes.datos.length;
+      const presentes = asistenciaRes.datos.filter((a) => a.estado === 'presente' || a.estado === 'justificado').length;
+      const ausentes = asistenciaRes.datos.filter((a) => a.estado === 'ausente').length;
+      const tardanzas = asistenciaRes.datos.filter((a) => a.estado === 'tardanza').length;
       this.stats.set({ porcentaje: total > 0 ? Math.round((presentes / total) * 100) : 100, ausentes, tardanzas });
+    }
+
+    if (seccionId) {
+      const anunciosRes = await this.repo.obtenerAnuncios(seccionId);
+      if (anunciosRes.error === null) {
+        this.anuncios.set(anunciosRes.datos);
+      }
     }
   }
 }

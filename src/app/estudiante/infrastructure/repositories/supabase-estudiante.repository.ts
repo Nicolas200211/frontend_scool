@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { EstudianteRepository } from '../../core/domain/ports/estudiante.repository';
 import { MiAsistencia } from '../../core/domain/models/mi-asistencia.model';
 import { MiHorario } from '../../core/domain/models/mi-horario.model';
+import { Anuncio } from '../../core/domain/models/anuncio.model';
 import { RespuestaApi } from '../../../shared/domain/types/respuesta-api.type';
 import { obtenerClienteSupabase } from '../../../shared/infrastructure/supabase/supabase.client';
 
@@ -85,6 +86,31 @@ export class SupabaseEstudianteRepository implements EstudianteRepository {
       docenteApellido: h.docentes?.usuarios?.apellido ?? '',
       seccionNombre: h.secciones?.nombre ?? '',
       gradoNombre: h.secciones?.grados?.nombre ?? '',
+    }));
+
+    return { datos: registros, error: null };
+  }
+
+  async obtenerAnuncios(seccionId: string): Promise<RespuestaApi<Anuncio[]>> {
+    const { data, error } = await this.supabase
+      .from('anuncios')
+      .select(`
+        id, tipo, titulo, mensaje, creado_en,
+        docentes(usuarios(nombre, apellido))
+      `)
+      .eq('seccion_id', seccionId)
+      .order('creado_en', { ascending: false });
+
+    if (error) return { datos: null, error: error.message };
+
+    const registros: Anuncio[] = (data ?? []).map((a: any) => ({
+      id: a.id,
+      tipo: a.tipo,
+      titulo: a.titulo,
+      mensaje: a.mensaje,
+      docenteNombre: a.docentes?.usuarios?.nombre ?? '',
+      docenteApellido: a.docentes?.usuarios?.apellido ?? '',
+      creadoEn: a.creado_en,
     }));
 
     return { datos: registros, error: null };

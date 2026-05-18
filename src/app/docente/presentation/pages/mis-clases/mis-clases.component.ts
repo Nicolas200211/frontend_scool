@@ -9,6 +9,7 @@ import { obtenerClienteSupabase } from '../../../../shared/infrastructure/supaba
 
 interface HorarioClase {
   id: string;
+  seccionId: string;
   asignaturaNombre: string;
   seccionNombre: string;
   gradoNombre: string;
@@ -48,12 +49,19 @@ interface HorarioClase {
                   </div>
                 } @else {
                   @for (c of clasesPorDiaPaginadas()[dia]; track c.id) {
-                    <div class="bg-slate-50/50 p-4 rounded-2xl border border-slate-100/70 hover:bg-white hover:border-indigo-150 hover:shadow-[0_4px_20px_rgb(99,102,241,0.05)] transition-all duration-150 space-y-2">
-                      <p class="font-extrabold text-slate-800 text-xs leading-tight">{{ c.asignaturaNombre }}</p>
-                      <div class="flex flex-col gap-1 text-[10px]">
-                        <span class="text-slate-400 font-bold">{{ c.gradoNombre }} — {{ c.seccionNombre }}</span>
-                        <span class="font-mono font-black text-indigo-900 bg-indigo-50/60 px-2 py-0.5 rounded-md inline-block w-fit">{{ c.horaInicio }} – {{ c.horaFin }}</span>
+                    <div class="bg-slate-50/50 p-4 rounded-2xl border border-slate-100/70 hover:bg-white hover:border-indigo-150 hover:shadow-[0_4px_20px_rgb(99,102,241,0.05)] transition-all duration-150 space-y-3">
+                      <div>
+                        <p class="font-extrabold text-slate-800 text-xs leading-tight">{{ c.asignaturaNombre }}</p>
+                        <div class="flex flex-col gap-1 text-[10px] mt-1.5">
+                          <span class="text-slate-400 font-bold">{{ c.gradoNombre }} — {{ c.seccionNombre }}</span>
+                          <span class="font-mono font-black text-indigo-900 bg-indigo-50/60 px-2 py-0.5 rounded-md inline-block w-fit">{{ c.horaInicio }} – {{ c.horaFin }}</span>
+                        </div>
                       </div>
+                      <button type="button" 
+                        (click)="abrirModalAnuncio(c)"
+                        class="w-full text-center py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-[10px] font-black rounded-xl transition duration-150">
+                        Publicar Anuncio
+                      </button>
                     </div>
                   }
                 }
@@ -85,6 +93,57 @@ interface HorarioClase {
         }
       </div>
     }
+
+    @if (modalAbierto()) {
+      <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl w-full max-w-lg shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-slate-100 overflow-hidden transform transition-all duration-300">
+          <div class="p-6 pb-4 border-b border-slate-50 flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-black text-slate-900">Publicar Anuncio</h3>
+              <p class="text-xs text-slate-400 mt-0.5">Publicar un aviso para la sección {{ claseSeleccionada()?.gradoNombre }} - {{ claseSeleccionada()?.seccionNombre }}</p>
+            </div>
+            <button type="button" (click)="cerrarModal()" class="w-8 h-8 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <form (submit)="publicarAnuncio($event)" class="p-6 space-y-4">
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tipo de Aviso</label>
+              <select name="tipo" required
+                class="w-full px-4 py-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200 text-sm font-semibold text-slate-700 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all cursor-pointer">
+                <option value="examen">EXAMEN (Fondo Rojo)</option>
+                <option value="entregado">ENTREGADO / TAREA (Fondo Verde)</option>
+                <option value="aviso">AVISO GENERAL (Fondo Azul)</option>
+              </select>
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Etiqueta/Título</label>
+              <input type="text" name="titulo" placeholder="Ej: EXAMEN, TAREA, AVISO" required
+                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all" />
+            </div>
+
+            <div class="space-y-1.5">
+              <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Mensaje / Contenido</label>
+              <textarea name="mensaje" rows="4" placeholder="Redacta el mensaje aquí. Puedes usar HTML como <strong>negrita</strong>." required
+                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 text-sm font-semibold text-slate-800 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all resize-none"></textarea>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-50">
+              <button type="button" (click)="cerrarModal()"
+                class="px-5 py-2.5 bg-slate-50 hover:bg-slate-100 text-slate-600 text-xs font-black rounded-2xl transition duration-150">
+                Cancelar
+              </button>
+              <button type="submit" [disabled]="publicando()"
+                class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-2xl shadow-sm hover:shadow transition duration-150 disabled:opacity-50">
+                @if (publicando()) { Publicando... } @else { Publicar Aviso }
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
   `,
 })
 export class MisClasesComponent implements OnInit {
@@ -95,6 +154,11 @@ export class MisClasesComponent implements OnInit {
   readonly cargando = signal(true);
   readonly clases = signal<HorarioClase[]>([]);
   readonly diasSemana = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes'];
+
+  readonly modalAbierto = signal(false);
+  readonly claseSeleccionada = signal<HorarioClase | null>(null);
+  readonly publicando = signal(false);
+  private docenteId = '';
 
   readonly paginaPorDia = signal<Record<string, number>>({
     lunes: 1, martes: 1, miercoles: 1, jueves: 1, viernes: 1
@@ -137,6 +201,7 @@ export class MisClasesComponent implements OnInit {
 
     const docenteId = await this.repo.obtenerIdDocente(usuarioId);
     if (!docenteId) { this.cargando.set(false); return; }
+    this.docenteId = docenteId;
 
     const { data, error: dbError } = await this.supabase
       .from('horarios')
@@ -152,6 +217,7 @@ export class MisClasesComponent implements OnInit {
 
     const mapeado: HorarioClase[] = (data ?? []).map((h: any) => ({
       id: h.id,
+      seccionId: h.seccion_id,
       asignaturaNombre: h.asignaturas?.nombre ?? '',
       seccionNombre: h.secciones?.nombre ?? '',
       gradoNombre: h.secciones?.grados?.nombre ?? '',
@@ -185,5 +251,52 @@ export class MisClasesComponent implements OnInit {
       const nueva = Math.min(Math.max(actual + delta, 1), total);
       return { ...paginas, [dia]: nueva };
     });
+  }
+
+  abrirModalAnuncio(clase: HorarioClase): void {
+    this.claseSeleccionada.set(clase);
+    this.modalAbierto.set(true);
+  }
+
+  cerrarModal(): void {
+    this.modalAbierto.set(false);
+    this.claseSeleccionada.set(null);
+  }
+
+  async publicarAnuncio(evento: Event): Promise<void> {
+    evento.preventDefault();
+    const formulario = evento.target as HTMLFormElement;
+    const datos = new FormData(formulario);
+    
+    const tipo = datos.get('tipo') as string;
+    const titulo = datos.get('titulo') as string;
+    const mensaje = datos.get('mensaje') as string;
+    const clase = this.claseSeleccionada();
+
+    if (!clase || !this.docenteId) {
+      toast.error('Ocurrió un error al identificar la clase o docente.');
+      return;
+    }
+
+    this.publicando.set(true);
+
+    const { error } = await this.supabase
+      .from('anuncios')
+      .insert({
+        docente_id: this.docenteId,
+        seccion_id: clase.seccionId,
+        tipo,
+        titulo,
+        mensaje,
+      });
+
+    this.publicando.set(false);
+
+    if (error) {
+      toast.error('Error al publicar: ' + error.message);
+    } else {
+      toast.success(`¡Anuncio publicado correctamente para ${clase.gradoNombre} - ${clase.seccionNombre}!`);
+      this.cerrarModal();
+    }
   }
 }
