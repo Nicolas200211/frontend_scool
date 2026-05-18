@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, signal, ElementRef, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { LoginUseCase } from '../../../core/application/login.usecase';
@@ -20,7 +21,7 @@ const RUTA_POR_ROL: Record<Rol, string> = {
   selector: 'app-login',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, CommonModule],
   template: `
     <!-- Contenedor principal anclado por GSAP ScrollTrigger -->
     <div #mainWrapper class="grid grid-cols-1 lg:grid-cols-2 bg-slate-50 h-screen w-full overflow-hidden">
