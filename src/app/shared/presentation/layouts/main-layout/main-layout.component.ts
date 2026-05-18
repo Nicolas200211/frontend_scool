@@ -99,8 +99,8 @@ const NAVEGACION: Record<Rol, ItemNavegacion[]> = {
           <button (click)="abrirPerfilModal()"
             class="w-full flex items-center gap-3 bg-slate-50/50 hover:bg-indigo-50/40 border border-slate-100/70 hover:border-indigo-100/50 p-3 rounded-2xl mb-3 shadow-[0_8px_30px_rgb(0,0,0,0.01)] text-left transition duration-150 group">
             
-            @if (esFotoValida(fotoUrlUsuario())) {
-              <img [src]="fotoUrlUsuario()" alt="Avatar" class="w-9 h-9 rounded-full object-cover shrink-0 border border-indigo-100 shadow-sm" />
+            @if (esFotoValida(fotoUrlUsuario()) && fotoUsuarioCargadaCorrectamente()) {
+              <img [src]="fotoUrlUsuario()" (error)="fotoUsuarioCargadaCorrectamente.set(false)" alt="Avatar" class="w-9 h-9 rounded-full object-cover shrink-0 border border-indigo-100 shadow-sm" />
             } @else {
               <div class="w-9 h-9 bg-indigo-50 border border-indigo-100 rounded-full flex items-center justify-center shrink-0">
                 <span class="text-xs font-bold text-indigo-700 group-hover:scale-105 transition">{{ inicialesUsuario() }}</span>
@@ -159,8 +159,9 @@ const NAVEGACION: Record<Rol, ItemNavegacion[]> = {
           
           <div class="flex flex-col items-center justify-center text-center space-y-2">
             <div class="relative group">
-              @if (esFotoValida(fotoUrlTemp())) {
-                <img [src]="fotoUrlTemp()" alt="Vista previa avatar" class="w-20 h-20 rounded-full object-cover border-2 border-indigo-600 shadow-md" />
+            <div class="relative group">
+              @if (esFotoValida(fotoUrlTemp()) && fotoTempCargadaCorrectamente()) {
+                <img [src]="fotoUrlTemp()" (error)="fotoTempCargadaCorrectamente.set(false)" alt="Vista previa avatar" class="w-20 h-20 rounded-full object-cover border-2 border-indigo-600 shadow-md" />
               } @else {
                 <div class="w-20 h-20 bg-indigo-50 border-2 border-indigo-100 rounded-full flex items-center justify-center shadow-inner">
                   <span class="text-xl font-bold text-indigo-700">{{ inicialesUsuario() }}</span>
@@ -253,6 +254,9 @@ export class MainLayoutComponent {
   readonly guardandoPerfil = signal(false);
   readonly opcionFoto = signal<'pc' | 'enlace'>('pc');
 
+  readonly fotoUsuarioCargadaCorrectamente = signal(true);
+  readonly fotoTempCargadaCorrectamente = signal(true);
+
   nombreInput = '';
   apellidoInput = '';
   enlaceFotoInput = '';
@@ -295,6 +299,8 @@ export class MainLayoutComponent {
     this.nombreInput = usuario.nombre;
     this.apellidoInput = usuario.apellido;
     this.fotoUrlTemp.set(usuario.fotoUrl ?? null);
+    this.fotoUsuarioCargadaCorrectamente.set(true);
+    this.fotoTempCargadaCorrectamente.set(true);
     
     if (usuario.fotoUrl && usuario.fotoUrl.startsWith('http')) {
       this.enlaceFotoInput = usuario.fotoUrl;
@@ -321,6 +327,7 @@ export class MainLayoutComponent {
         return;
       }
 
+      this.fotoTempCargadaCorrectamente.set(true);
       const lector = new FileReader();
       lector.onload = () => {
         this.fotoUrlTemp.set(lector.result as string);
@@ -330,6 +337,7 @@ export class MainLayoutComponent {
   }
 
   onUrlCambia(): void {
+    this.fotoTempCargadaCorrectamente.set(true);
     this.fotoUrlTemp.set(this.enlaceFotoInput.trim() || null);
   }
 
@@ -361,6 +369,7 @@ export class MainLayoutComponent {
         return;
       }
 
+      this.fotoUsuarioCargadaCorrectamente.set(true);
       this.authState.actualizarUsuario({
         nombre: this.nombreInput.trim(),
         apellido: this.apellidoInput.trim(),
