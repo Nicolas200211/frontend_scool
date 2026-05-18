@@ -35,8 +35,7 @@ const ETIQUETAS: Record<DiaSemana, string> = {
             
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
               @for (h of clasesPorDia(dia); track h.id) {
-                <div class="bg-white rounded-3xl p-5 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col justify-between hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group relative overflow-hidden">
-                  <div class="absolute top-0 left-0 w-full h-[3px] bg-gradient-to-r from-indigo-500 to-indigo-600"></div>
+                <div class="bg-white rounded-3xl p-5 border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)] flex flex-col justify-between hover:shadow-md hover:border-indigo-100 hover:-translate-y-0.5 transition-all duration-200 group relative overflow-hidden">
 
                   <div class="space-y-4">
                     <div class="flex items-center gap-2">
