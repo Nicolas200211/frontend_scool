@@ -108,7 +108,7 @@ const NAVEGACION: Record<Rol, ItemNavegacion[]> = {
             }
 
             <div class="flex-1 min-w-0">
-              <p class="text-xs font-bold text-slate-800 truncate leading-none group-hover:text-indigo-900 transition">{{ nombreCompleto() }}</p>
+              <p class="text-xs font-bold text-slate-800 leading-tight break-words group-hover:text-indigo-900 transition">{{ nombreCompleto() }}</p>
               <span class="inline-block bg-indigo-100/60 text-indigo-700 text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider mt-1 font-mono">
                 {{ authState.rolUsuario() }}
               </span>
