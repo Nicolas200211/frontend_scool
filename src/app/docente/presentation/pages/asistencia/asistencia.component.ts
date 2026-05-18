@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal, computed } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { toast } from 'ngx-sonner';
 import { PageHeaderComponent } from '../../../../shared/components/page-header/page-header.component';
@@ -25,7 +26,7 @@ interface FilaAsistencia extends RegistroAsistencia {
   selector: 'app-asistencia-docente',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, PageHeaderComponent, LoadingSpinnerComponent, EmptyStateComponent, PaginadorComponent],
+  imports: [CommonModule, FormsModule, PageHeaderComponent, LoadingSpinnerComponent, EmptyStateComponent, PaginadorComponent],
   template: `
     <app-page-header titulo="Tomar Asistencia" [subtitulo]="'Control diario de clases • ' + fechaFormateada()" />
 
@@ -102,6 +103,7 @@ interface FilaAsistencia extends RegistroAsistencia {
             <table class="w-full text-sm">
               <thead>
                 <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-400 text-xs font-bold uppercase tracking-wider">
+                  <th class="px-6 py-4 text-left">Foto</th>
                   <th class="px-6 py-4 text-left">Estudiante</th>
                   <th class="px-6 py-4 text-left">Estado de Asistencia</th>
                   <th class="px-6 py-4 text-left">Observación</th>
@@ -110,6 +112,14 @@ interface FilaAsistencia extends RegistroAsistencia {
               <tbody class="divide-y divide-slate-50">
                 @for (fila of filasPagina(); track fila.matriculaId) {
                   <tr class="hover:bg-slate-50/30 transition duration-150">
+                    <td class="px-6 py-4">
+                       <img *ngIf="fila.fotoUrl; else sinFoto" [src]="fila.fotoUrl" alt="Foto {{ fila.estudianteNombre }} {{ fila.estudianteApellido }}" class="w-12 h-12 rounded-full object-cover border-2 border-indigo-100 shadow-lg" />
+                       <ng-template #sinFoto>
+                         <div class="w-12 h-12 flex items-center justify-center bg-slate-200 rounded-full text-slate-500">
+                           📸
+                         </div>
+                       </ng-template>
+                     </td>
                     <td class="px-6 py-4 shrink-0">
                       <p class="font-extrabold text-slate-800">{{ fila.estudianteApellido }}, {{ fila.estudianteNombre }}</p>
                       <p class="text-[10px] text-slate-400 font-mono font-bold">{{ fila.estudianteCodigo }}</p>
